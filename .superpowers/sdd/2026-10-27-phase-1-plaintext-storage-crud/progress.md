@@ -1,0 +1,11 @@
+# SDD ledger — plan: docs/superpowers/plans/2026-10-27-phase-1-plaintext-storage-crud.md
+Task 1: complete (commits 0aeb29c..a53d092, tests: pytest tests/test_scaffolding.py → 3 passed)
+Task 2: complete (commits a53d092..822593c, tests: pytest → 9 passed)
+Task 3: complete (commits 6524983..6524983 [single], tests: pytest → 11 passed)
+Task 4: complete (commits 57f29fb..57f29fb [single], tests: pytest → 19 passed)
+Task 5: complete (commits 438eae9..438eae9 [single], tests: pytest → 22 passed)
+Task 6: complete (commits 78a725f..78a725f [single], tests: pytest → 25 passed)
+Task 7: complete (commits cbb4614..cbb4614 [single], tests: pytest → 28 passed)
+Task 8: complete (commits ab0f510..ab0f510 [single], tests: pytest → 32 passed)
+Task 9: complete (commits 086aba2..086aba2 [single], tests: pytest → 35 passed)
+Task 10: complete (commits f895b22..f895b22 [single], tests: pytest → 37 passed)
