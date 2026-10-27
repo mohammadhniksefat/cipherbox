@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import os
 import tempfile
+from datetime import datetime, timezone
 from pathlib import Path
 
 from cipherbox.config.paths import VaultConfig, save_config
@@ -18,6 +19,10 @@ from cipherbox.errors import (
 
 CONFIG_FILE_NAME = "config.json"
 ENTRIES_DIR_NAME = "entries"
+
+
+def _now_utc() -> str:
+    return datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
 
 
 class VaultRepository:
@@ -80,9 +85,15 @@ class VaultRepository:
         existing = self.get(entry_id)
         merged = existing.to_dict()
         merged.update(updates)
-        # id and created_at are immutable through edit.
+        # Deep-merge the fields map so untouched fields are preserved.
+        if "fields" in updates:
+            merged_fields = dict(existing.fields or {})
+            merged_fields.update(updates["fields"])
+            merged["fields"] = merged_fields
+        # id and created_at are immutable through edit; refresh updated_at.
         merged["id"] = existing.id
         merged["created_at"] = existing.created_at
+        merged["updated_at"] = _now_utc()
         entry = entry_from_dict(merged)
         self._write_entry_file(self._entry_path(entry_id), entry)
         return entry

@@ -95,3 +95,23 @@ def test_list_returns_all_entries(tmp_path):
     repo.add(_make_entry("id-2", "second"))
     ids = {e.id for e in repo.list()}
     assert ids == {"id-1", "id-2"}
+
+
+def test_edit_merges_fields_preserving_untouched(tmp_path):
+    repo = VaultRepository(tmp_path)
+    repo.add(_make_entry("id-1", "github"))
+    entry = repo.edit("id-1", {"fields": {"password": "newpass"}})
+    assert entry.fields["password"] == "newpass"
+    assert entry.fields["username"] == "alice"  # untouched field preserved
+    assert entry.id == "id-1"
+    assert entry.created_at == "2026-01-01T00:00:00Z"
+
+
+def test_edit_updates_updated_at(tmp_path):
+    repo = VaultRepository(tmp_path)
+    repo.add(_make_entry("id-1", "github"))
+    before = repo.get("id-1").updated_at
+    repo.edit("id-1", {"title": "renamed"})
+    after = repo.get("id-1").updated_at
+    assert after != before
+
