@@ -1,0 +1,19 @@
+{
+
+    "env": {
+
+        "CLAUDE_CODE_DISABLE_AUTO_MEMORY": "1",
+
+        "ANTHROPIC_BASE_URL": "http://localhost:20128/v1",
+
+        "ANTHROPIC_AUTH_TOKEN": "sk-15969e38738b3c08-geoefi-f52c6c4b",
+
+        "ANTHROPIC_DEFAULT_OPUS_MODEL": "first-combo",
+
+        "ANTHROPIC_DEFAULT_SONNET_MODEL": "first-combo",
+
+        "ANTHROPIC_DEFAULT_HAIKU_MODEL": "first-combo"
+
+    }
+
+}
