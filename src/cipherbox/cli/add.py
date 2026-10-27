@@ -43,7 +43,7 @@ def add_command(args: argparse.Namespace, repo: VaultRepository | None = None) -
         return 2
 
     now = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
-    fields = _parse_fields(getattr(args, "fields", []) or [])
+    fields = _parse_fields(getattr(args, "field", []) or [])
 
     # Only prompt interactively when no fields were supplied on the command line.
     if not fields:
