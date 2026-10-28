@@ -65,7 +65,11 @@ class VaultRepository:
         return self._read_entry_file(path)
 
     def show(self, entry_id: str, redact: bool = True) -> Entry:
-        """Load an entry, redacting secret fields by default."""
+        """Load an entry, redacting secret field values by default.
+
+        Field keys are always preserved so callers know which fields exist;
+        only the values are redacted.
+        """
         entry = self.get(entry_id)
         if redact:
             return Entry(
@@ -76,7 +80,7 @@ class VaultRepository:
                 tags=list(entry.tags),
                 created_at=entry.created_at,
                 updated_at=entry.updated_at,
-                fields={},
+                fields={key: "" for key in entry.fields},
             )
         return entry
 

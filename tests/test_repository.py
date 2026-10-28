@@ -31,7 +31,10 @@ def test_show_redacts_fields_by_default(tmp_path):
     repo.add(_make_entry("id-1", "github"))
     shown = repo.show("id-1")
     assert shown.title == "github"
-    assert shown.fields == {}  # redacted by default
+    # field keys are preserved; values are redacted
+    assert set(shown.fields.keys()) == {"username", "password"}
+    assert shown.fields["username"] == ""
+    assert shown.fields["password"] == ""
 
 
 def test_show_without_redaction_reveals_fields(tmp_path):
@@ -39,6 +42,7 @@ def test_show_without_redaction_reveals_fields(tmp_path):
     repo.add(_make_entry("id-1", "github"))
     shown = repo.show("id-1", redact=False)
     assert shown.fields["password"] == "secret"
+    assert shown.fields["username"] == "alice"
 
 
 def test_add_duplicate_id_raises(tmp_path):

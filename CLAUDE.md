@@ -46,7 +46,6 @@ Key architectural principles from the specification:
 - CLI-first interface with clear command structure (init, add, list, search, show, get, edit, delete, import, export, backup, restore, check, doctor, generate)
 - Local-first design with one JSON file per secret in the vault directory
 - Master password derived key kept only in memory during process execution
-- Syncthing handles synchronization; application focuses on encrypted file management
 - Versioned schemas for secret metadata and encrypted file envelopes
 - Stable identifiers (UUIDs) for entries independent of filenames
 - Deterministic error types and exit codes

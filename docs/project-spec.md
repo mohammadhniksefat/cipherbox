@@ -1,6 +1,6 @@
 # CLI Secrets Manager — Development Specification
 
-The project should be developed in phases, with each phase delivering a usable, testable result. The goal is to build a local-first developer secrets manager that stores one encrypted JSON file per secret and synchronizes through Syncthing.
+The project should be developed in phases, with each phase delivering a usable, testable result. The goal is to build a local-first developer secrets manager that stores one encrypted JSON file per secret, with file synchronization left to the user's chosen means.
 
 I'll use the decisions established so far:
 
@@ -10,7 +10,7 @@ I'll use the decisions established so far:
 - Encryption: Master password + Argon2id key derivation + authenticated encryption.
 - Unlocking: Derive the key once per command, keep it in memory, and discard it when the process exits.
 - Output: Hide secret values by default; expose them only through explicit retrieval or export operations.
-- Synchronization: Syncthing handles file synchronization; the application does not implement its own network synchronization.
+- Synchronization: The application does not implement its own network synchronization; users may synchronize vault files by any means they choose.
 - Recovery: Backups, imports, exports, validation, and manual conflict recovery.
 
 The specification below is organized into implementation phases with scope, requirements, acceptance criteria, and explicit exclusions. Each phase should be independently testable before proceeding.
@@ -327,9 +327,9 @@ The application must derive the new key and re-encrypt the vault entries safely.
 
 Persistent unlocked sessions, OS credential-store integration, biometric unlocking, and multi-user access.
 
-## Phase 4 — Safe writes, synchronization compatibility, and recovery
+## Phase 4 — Safe writes, recovery, and external modification handling
 
-Deliverable: Reliable Syncthing workflow
+Deliverable: Reliable vault workflow resistant to external file changes
 
 ### Objective
 
@@ -348,7 +348,7 @@ Make the encrypted file vault resilient to normal filesystem failures and extern
 
 2\. External modifications
 
-If an entry changes outside the application, such as through Syncthing:
+If an entry changes outside the application:
 
 - Reload the file when it is next accessed.
 - Validate it before use.
@@ -359,7 +359,7 @@ If an entry changes outside the application, such as through Syncthing:
 
 Do not implement an automatic merge engine.
 
-If Syncthing creates conflict copies:
+If external changes create conflicting copies:
 
 - Preserve the original and conflict files.
 - Identify suspicious duplicate or conflicting entries.
@@ -551,12 +551,12 @@ Make the application installable, understandable, and safe enough for real perso
 - Add integration tests covering complete user workflows.
 - Add dependency auditing and standard Python linting.
 - Test recovery from corrupted files and failed imports.
-- Test multiple Syncthing devices with concurrent edits and conflict copies.
+- Test external modifications and conflicting file copies.
 - Document threat-model limitations, including malware running under your user account and exposure of explicitly retrieved secrets.
 
 ### Acceptance criteria
 
-A user can install the CLI, initialize a vault, create encrypted entries, search and retrieve secrets, synchronize the directory using Syncthing, export selected entries, and restore from a backup using only the documentation.
+A user can install the CLI, initialize a vault, create encrypted entries, search and retrieve secrets, synchronize the directory by their chosen means, export selected entries, and restore from a backup using only the documentation.
 
 ## Recommended implementation order
 
@@ -620,7 +620,7 @@ The first release is complete when all of these are true:
 - Secret values are hidden by default.
 - CRUD operations preserve stable IDs and validate data.
 - Writes are atomic where supported.
-- Syncthing conflicts are preserved rather than silently merged.
+- Conflicting file copies are preserved rather than silently merged.
 - Import/export and encrypted backup/restore work.
 - Corrupted files and incorrect passwords fail safely.
 - Automated tests and user documentation cover the core workflows.
