@@ -26,6 +26,7 @@ from cipherbox.crypto.aead import (
 )
 from cipherbox.domain.entry import Entry, entry_from_dict, entry_to_dict, validate_entry
 from cipherbox.errors import (
+    ConflictError,
     DecryptionError,
     DuplicateIdError,
     MalformedFileError,
@@ -164,20 +165,60 @@ class VaultRepository:
     def list(self) -> list[Entry]:
         """Load all valid entries in the vault.
 
-        Malformed files are skipped; DecryptionError (wrong key / locked
-        vault) propagates so a locked encrypted vault never silently
-        returns an empty list.
+        Every file is read from disk on each call (no stale in-memory
+        copy across CLI invocations). Malformed files are skipped;
+        DecryptionError (wrong key / locked vault) propagates so a
+        locked encrypted vault never silently returns an empty list.
+        Raises ConflictError if two files resolve to the same entry ID
+        (a synchronization conflict) — neither copy is silently dropped.
         """
+        by_id: dict[str, tuple[Entry, Path]] = {}
         entries: list[Entry] = []
         if not self.entries_dir.exists():
             return entries
         for path in sorted(self.entries_dir.glob("*.json")):
             try:
-                entries.append(self._read_entry_file(path))
+                entry = self._read_entry_file(path)
             except MalformedFileError:
                 # Skip malformed files in listing; they are reported separately.
                 continue
+            existing = by_id.get(entry.id)
+            if existing is not None:
+                other_entry, other_path = existing
+                raise ConflictError(
+                    f"entry id {entry.id!r} exists in {path} and {other_path}; "
+                    "conflicting copies preserved for manual recovery"
+                )
+            by_id[entry.id] = (entry, path)
+            entries.append(entry)
         return entries
+
+    def detect_conflicts(self) -> list[dict[str, str]]:
+        """Report duplicate entry IDs across files without raising.
+
+        Returns a list of ``{"id", "file1", "file2"}`` dicts, one per
+        conflicting pair. Used by recovery tooling to surface sync
+        conflicts without aborting normal operation.
+        """
+        by_id: dict[str, tuple[str, Path]] = {}
+        conflicts: list[dict[str, str]] = []
+        if not self.entries_dir.exists():
+            return conflicts
+        for path in sorted(self.entries_dir.glob("*.json")):
+            try:
+                entry = self._read_entry_file(path)
+            except (MalformedFileError, DecryptionError):
+                # Skip files that cannot be parsed; they are not ID conflicts.
+                continue
+            existing = by_id.get(entry.id)
+            if existing is not None:
+                _, other_path = existing
+                conflicts.append(
+                    {"id": entry.id, "file1": str(other_path), "file2": str(path)}
+                )
+            else:
+                by_id[entry.id] = (entry.id, path)
+        return conflicts
 
     def _write_entry_file(self, path: Path, entry: Entry) -> None:
         path.parent.mkdir(parents=True, exist_ok=True)

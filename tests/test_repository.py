@@ -1,9 +1,16 @@
 """Tests for the JSON file storage repository."""
 
+import json
+
 import pytest
 
 from cipherbox.domain.entry import Entry
-from cipherbox.errors import DuplicateIdError, MalformedFileError, MissingEntryError
+from cipherbox.errors import (
+    ConflictError,
+    DuplicateIdError,
+    MalformedFileError,
+    MissingEntryError,
+)
 from cipherbox.storage.repository import VaultRepository
 
 
@@ -204,3 +211,98 @@ def test_list_skips_malformed_but_raises_wrong_key(tmp_path):
     (entries_dir / "bad-id.json").write_text("{not valid json", encoding="utf-8")
     with pytest.raises(DecryptionError):
         locked.list()
+
+
+# --- conflict detection tests ---
+
+
+def test_list_raises_conflict_on_duplicate_ids_across_files(tmp_path):
+    repo = VaultRepository(tmp_path)
+    repo.add(_make_entry("id-1", "first"))
+    # plant a second file with the same id but different content
+    path = tmp_path / "entries" / "other.json"
+    path.write_text(
+        json.dumps(
+            {
+                "id": "id-1",
+                "schema_version": 1,
+                "type": "login",
+                "title": "second",
+                "tags": [],
+                "created_at": "2026-01-01T00:00:00Z",
+                "updated_at": "2026-01-01T00:00:00Z",
+                "fields": {},
+            }
+        ),
+        encoding="utf-8",
+    )
+    with pytest.raises(ConflictError) as exc_info:
+        repo.list()
+    message = str(exc_info.value)
+    assert "id-1" in message
+    assert str(path) in message
+
+
+def test_detect_conflicts_returns_duplicates_without_raising(tmp_path):
+    repo = VaultRepository(tmp_path)
+    repo.add(_make_entry("id-1", "first"))
+    path = tmp_path / "entries" / "other.json"
+    path.write_text(
+        json.dumps(
+            {
+                "id": "id-1",
+                "schema_version": 1,
+                "type": "login",
+                "title": "second",
+                "tags": [],
+                "created_at": "2026-01-01T00:00:00Z",
+                "updated_at": "2026-01-01T00:00:00Z",
+                "fields": {},
+            }
+        ),
+        encoding="utf-8",
+    )
+    conflicts = repo.detect_conflicts()
+    assert len(conflicts) == 1
+    assert conflicts[0]["id"] == "id-1"
+    assert conflicts[0]["file2"] == str(path)
+
+
+def test_detect_conflicts_empty_when_no_duplicates(tmp_path):
+    repo = VaultRepository(tmp_path)
+    repo.add(_make_entry("id-1", "first"))
+    repo.add(_make_entry("id-2", "second"))
+    assert repo.detect_conflicts() == []
+
+
+def test_atomic_write_leaves_no_temp_and_round_trips(tmp_path):
+    repo = VaultRepository(tmp_path)
+    entry = _make_entry("id-1", "github")
+    repo.add(entry)
+    entry_file = tmp_path / "entries" / "id-1.json"
+    assert entry_file.exists()
+    assert not list(tmp_path.glob("entries/*.tmp"))
+    assert repo.get("id-1") == entry
+
+
+def test_reload_on_next_access_sees_external_modification(tmp_path):
+    repo = VaultRepository(tmp_path)
+    repo.add(_make_entry("id-1", "first"))
+    # externally modify the file on disk
+    entry_file = tmp_path / "entries" / "id-1.json"
+    entry_file.write_text(
+        json.dumps(
+            {
+                "id": "id-1",
+                "schema_version": 1,
+                "type": "login",
+                "title": "second",
+                "tags": [],
+                "created_at": "2026-01-01T00:00:00Z",
+                "updated_at": "2026-01-02T00:00:00Z",
+                "fields": {},
+            }
+        ),
+        encoding="utf-8",
+    )
+    assert repo.get("id-1").title == "second"

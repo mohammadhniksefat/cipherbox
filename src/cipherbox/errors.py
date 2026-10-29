@@ -61,3 +61,14 @@ class ConfirmationRequiredError(VaultError):
 
     def __init__(self, message: str) -> None:
         super().__init__(message, EXIT_CONFIRMATION)
+
+
+class ConflictError(VaultError):
+    """Raised when two entry files resolve to the same stable entry ID.
+
+    Never silently picked between: both conflicting files are preserved
+    for manual recovery.
+    """
+
+    def __init__(self, message: str) -> None:
+        super().__init__(message, EXIT_ERROR)
