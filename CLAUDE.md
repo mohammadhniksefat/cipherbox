@@ -62,3 +62,18 @@ The development follows a phased approach:
 8. Release hardening
 
 Refer to docs/project-spec.md for detailed phase requirements and acceptance criteria.
+
+## Codebase Memory (Graph Tools)
+
+This repository is indexed in the codebase-memory knowledge graph for structural code discovery. When navigating or modifying code, prefer graph tools over raw filesystem search where they apply:
+
+- `search_graph` — find symbols, definitions, and usages across the graph.
+- `trace_path` — find callers and callees of a function/method (follow edges).
+- `get_code_snippet` — retrieve exact source for a symbol by path/line.
+- `query_graph` — complex multi-hop patterns (e.g., "which services call storage.write?").
+- `get_architecture` — high-level module orientation.
+- `check_index_coverage` — verify a path or scope is fully indexed before making exhaustive/negative claims. Coverage is best-effort, never proof of completeness: absence from the parse_partial/skipped lists is not a guarantee; grep flagged ranges when citing a file.
+- `index_status` / `detect_changes` — project health and freshness.
+- `index_repository` — re-index only after large external updates or when coverage is in doubt.
+
+Graph edges cover imports, calls, type-aware references, and similarity/semantic links. Literal text, config, and non-code content still require filesystem grep/search. Excluded directories (.claude, .git, caches, .venv, example-vault) are excluded by design.
