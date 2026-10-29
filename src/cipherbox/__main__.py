@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import sys
+from pathlib import Path
 
 from cipherbox.cli.add import add_command
 from cipherbox.cli.delete import delete_command
@@ -13,7 +14,7 @@ from cipherbox.cli.list import list_command
 from cipherbox.cli.search import search_command
 from cipherbox.cli.show import show_command
 from cipherbox.config.paths import default_vault_dir
-from cipherbox.errors import EXIT_OK
+from cipherbox.errors import EXIT_OK, VaultError
 from cipherbox.storage.repository import VaultRepository
 
 
@@ -156,10 +157,45 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def _repo(args) -> VaultRepository:
-    from cipherbox.config.paths import default_vault_dir
+    """Open the vault, unlocking it with a hidden password prompt when encrypted.
 
-    vault_path = getattr(args, "path", None) or default_vault_dir()
-    return VaultRepository(vault_path)
+    ``init`` is excluded from prompting (it creates the vault). For an
+    encrypted vault the master password is read through ``getpass`` (never
+    a CLI argument), the key is derived with Argon2id, and an unlocked
+    repository is returned. A wrong password raises ``DecryptionError``.
+    """
+    import base64
+
+    from cipherbox.crypto.kdf import kdf_params_from_dict
+    from cipherbox.crypto.vault import (
+        VaultKeyManager,
+        load_vault_crypto,
+        prompt_password,
+    )
+
+    vault_path = Path(getattr(args, "path", None) or default_vault_dir())
+
+    if args.command == "init":
+        return VaultRepository(vault_path)
+
+    try:
+        meta = load_vault_crypto(vault_path)
+    except FileNotFoundError:
+        # Vault not initialized yet; plaintext repository.
+        return VaultRepository(vault_path)
+
+    if not meta.get("encrypted"):
+        return VaultRepository(vault_path)
+
+    password = prompt_password()
+    salt = base64.b64decode(meta["salt"])
+    params = kdf_params_from_dict(meta["kdf_params"])
+    mgr = VaultKeyManager()
+    try:
+        key = mgr.unlock(password, salt, params)
+    except Exception as exc:
+        raise VaultError(f"failed to unlock vault: {exc}") from exc
+    return VaultRepository(vault_path, key=key)
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -169,20 +205,24 @@ def main(argv: list[str] | None = None) -> int:
         parser.print_help()
         return EXIT_OK
 
-    if args.command == "init":
-        return init_command(args)
-    if args.command == "add":
-        return add_command(args, repo=_repo(args))
-    if args.command == "list":
-        return list_command(args, repo=_repo(args))
-    if args.command == "search":
-        return search_command(args, repo=_repo(args))
-    if args.command == "show":
-        return show_command(args, repo=_repo(args))
-    if args.command == "edit":
-        return edit_command(args, repo=_repo(args))
-    if args.command == "delete":
-        return delete_command(args, repo=_repo(args))
+    try:
+        if args.command == "init":
+            return init_command(args)
+        if args.command == "add":
+            return add_command(args, repo=_repo(args))
+        if args.command == "list":
+            return list_command(args, repo=_repo(args))
+        if args.command == "search":
+            return search_command(args, repo=_repo(args))
+        if args.command == "show":
+            return show_command(args, repo=_repo(args))
+        if args.command == "edit":
+            return edit_command(args, repo=_repo(args))
+        if args.command == "delete":
+            return delete_command(args, repo=_repo(args))
+    except VaultError as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return exc.exit_code
 
     parser.print_help()
     return EXIT_OK
