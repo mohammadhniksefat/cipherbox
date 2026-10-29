@@ -10,10 +10,19 @@ from pathlib import Path
 
 @dataclass(frozen=True)
 class VaultConfig:
-    """Resolved locations for a vault: config file and entries directory."""
+    """Resolved locations for a vault: config file and entries directory.
+
+    Encryption metadata (whether the vault is encrypted, the KDF id and
+    parameters, and the random salt) lives in the config file and is
+    loaded separately via :func:`load_vault_crypto`.
+    """
 
     vault_dir: Path
     config_file: Path
+    encrypted: bool = False
+    kdf: str | None = None
+    kdf_params: dict | None = None
+    salt: str | None = None
 
     @property
     def entries_dir(self) -> Path:

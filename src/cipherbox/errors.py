@@ -46,6 +46,16 @@ class MalformedFileError(VaultError):
         super().__init__(message, EXIT_VALIDATION)
 
 
+class DecryptionError(VaultError):
+    """Raised when an encrypted entry cannot be authenticated or decrypted.
+
+    Fail closed: authentication failures must not produce partial plaintext.
+    """
+
+    def __init__(self, message: str) -> None:
+        super().__init__(message, EXIT_VALIDATION)
+
+
 class ConfirmationRequiredError(VaultError):
     """Raised when a destructive operation requires confirmation."""
 
