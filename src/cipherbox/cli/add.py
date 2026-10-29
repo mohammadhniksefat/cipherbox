@@ -5,10 +5,10 @@ from __future__ import annotations
 import argparse
 import sys
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
-from cipherbox.domain.entry import Entry, entry_from_dict, validate_entry
-from cipherbox.domain.schema import SECRET_TYPES, SCHEMA_VERSION
+from cipherbox.domain.entry import Entry, validate_entry
+from cipherbox.domain.schema import SCHEMA_VERSION, SECRET_TYPES
 from cipherbox.errors import InvalidEntryError, VaultError
 from cipherbox.storage.repository import VaultRepository
 
@@ -42,7 +42,7 @@ def add_command(args: argparse.Namespace, repo: VaultRepository | None = None) -
         print(f"error: unknown secret type {args.type!r}", file=sys.stderr)
         return 2
 
-    now = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+    now = datetime.now(UTC).isoformat().replace("+00:00", "Z")
     fields = _parse_fields(getattr(args, "field", []) or [])
 
     # Only prompt interactively when no fields were supplied on the command line.

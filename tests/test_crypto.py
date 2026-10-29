@@ -1,5 +1,7 @@
 """Tests for the crypto primitives: Argon2id KDF and AES-GCM envelope."""
 
+import base64
+
 import pytest
 
 from cipherbox.crypto.aead import (
@@ -50,7 +52,9 @@ def test_decrypt_wrong_key_raises():
 def test_decrypt_tampered_ciphertext_raises():
     key = derive_key("pw", b"salt1234567890ab", default_kdf_params())
     env = encrypt_envelope(b"pt", key, b"aad")
-    env["ciphertext"] = env["ciphertext"][:-1] + chr(ord(env["ciphertext"][-1]) ^ 1)
+    ciphertext = bytearray(base64.b64decode(env["ciphertext"]))
+    ciphertext[0] ^= 1  # flip a bit in the ciphertext
+    env["ciphertext"] = base64.b64encode(bytes(ciphertext)).decode("ascii")
     with pytest.raises(DecryptionError):
         decrypt_envelope(env, key)
 

@@ -1,7 +1,6 @@
 """Tests for the `vault init` command."""
 
 import argparse
-from unittest.mock import patch
 
 from cipherbox.cli.init import init_command
 

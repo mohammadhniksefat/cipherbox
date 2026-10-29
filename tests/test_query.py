@@ -11,7 +11,14 @@ from cipherbox.services.query import (
 )
 
 
-def _make_entry(entry_id, type="login", title="x", tags=(), fields=None, updated="2026-01-01T00:00:00Z"):
+def _make_entry(
+    entry_id,
+    type="login",
+    title="x",
+    tags=(),
+    fields=None,
+    updated="2026-01-01T00:00:00Z",
+):
     return Entry(
         id=entry_id,
         schema_version=1,
@@ -89,8 +96,20 @@ def test_search_in_title_only_restricts_to_title():
 
 def test_combined_filters_use_and_semantics():
     entries = [
-        _make_entry("a", type="login", title="github", tags=("dev",), fields={"provider": "github"}),
-        _make_entry("b", type="login", title="gitlab", tags=("dev",), fields={"provider": "gitlab"}),
+        _make_entry(
+            "a",
+            type="login",
+            title="github",
+            tags=("dev",),
+            fields={"provider": "github"},
+        ),
+        _make_entry(
+            "b",
+            type="login",
+            title="gitlab",
+            tags=("dev",),
+            fields={"provider": "gitlab"},
+        ),
     ]
     query = EntryQuery(type="login", tags=("dev",), search="gitlab")
     assert [e.id for e in filter_entries(entries, query)] == ["b"]

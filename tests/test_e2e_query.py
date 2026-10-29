@@ -35,24 +35,54 @@ def test_e2e_list_filters_and_redacts_json(tmp_path, capsys):
     _seed(
         vault_dir,
         [
-            _entry("id-a", "login", "github", {"username": "alice", "password": "secret"}, tags=["dev", "personal"]),
-            _entry("id-b", "api-key", "openai", {"provider": "openai", "token": "sk-xyz"}, tags=["dev"]),
-            _entry("id-c", "login", "gitlab", {"hostname": "staging.gitlab.example.com"}, tags=["ops"]),
+            _entry(
+                "id-a",
+                "login",
+                "github",
+                {"username": "alice", "password": "secret"},
+                tags=["dev", "personal"],
+            ),
+            _entry(
+                "id-b",
+                "api-key",
+                "openai",
+                {"provider": "openai", "token": "sk-xyz"},
+                tags=["dev"],
+            ),
+            _entry(
+                "id-c",
+                "login",
+                "gitlab",
+                {"hostname": "staging.gitlab.example.com"},
+                tags=["ops"],
+            ),
         ],
     )
 
     # list --type login --tag dev --tag personal --output json: AND semantics
-    code = main([
-        "list", "--path", str(vault_dir),
-        "--type", "login", "--tag", "dev", "--tag", "personal",
-        "--output", "json",
-    ])
+    code = main(
+        [
+            "list",
+            "--path",
+            str(vault_dir),
+            "--type",
+            "login",
+            "--tag",
+            "dev",
+            "--tag",
+            "personal",
+            "--output",
+            "json",
+        ]
+    )
     assert code == 0
     data = json.loads(capsys.readouterr().out)
     ids = [entry["id"] for entry in data]
     assert "id-a" in ids, f"expected github entry in results, got {ids}"
     # field values redacted by default
-    assert all(all(v == "<redacted>" for v in entry["fields"].values()) for entry in data)
+    assert all(
+        all(v == "<redacted>" for v in entry["fields"].values()) for entry in data
+    )
 
 
 def test_e2e_search_matches_field_value(tmp_path, capsys):
@@ -61,13 +91,29 @@ def test_e2e_search_matches_field_value(tmp_path, capsys):
     capsys.readouterr()
     _seed(
         vault_dir,
-        [_entry("id-b", "api-key", "openai", {"provider": "openai", "token": "sk-staging-token"}, tags=["dev"])],
+        [
+            _entry(
+                "id-b",
+                "api-key",
+                "openai",
+                {"provider": "openai", "token": "sk-staging-token"},
+                tags=["dev"],
+            )
+        ],
     )
 
-    code = main([
-        "search", "--path", str(vault_dir), "staging",
-        "--in", "fields", "--output", "json",
-    ])
+    code = main(
+        [
+            "search",
+            "--path",
+            str(vault_dir),
+            "staging",
+            "--in",
+            "fields",
+            "--output",
+            "json",
+        ]
+    )
     assert code == 0
     data = json.loads(capsys.readouterr().out)
     assert len(data) == 1
@@ -81,15 +127,40 @@ def test_e2e_list_sorted_by_updated_is_deterministic(tmp_path, capsys):
     _seed(
         vault_dir,
         [
-            _entry("id-1", "login", "zeta", {"a": "1"}, tags=["dev"], updated="2026-01-02T00:00:00Z"),
-            _entry("id-2", "login", "alpha", {"a": "2"}, tags=["dev"], updated="2026-01-01T00:00:00Z"),
+            _entry(
+                "id-1",
+                "login",
+                "zeta",
+                {"a": "1"},
+                tags=["dev"],
+                updated="2026-01-02T00:00:00Z",
+            ),
+            _entry(
+                "id-2",
+                "login",
+                "alpha",
+                {"a": "2"},
+                tags=["dev"],
+                updated="2026-01-01T00:00:00Z",
+            ),
         ],
     )
 
-    code = main([
-        "list", "--path", str(vault_dir),
-        "--type", "login", "--tag", "dev", "--sort", "updated", "--output", "json",
-    ])
+    code = main(
+        [
+            "list",
+            "--path",
+            str(vault_dir),
+            "--type",
+            "login",
+            "--tag",
+            "dev",
+            "--sort",
+            "updated",
+            "--output",
+            "json",
+        ]
+    )
     assert code == 0
     data = json.loads(capsys.readouterr().out)
     assert len(data) == 2

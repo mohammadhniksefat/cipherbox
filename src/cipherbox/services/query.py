@@ -8,8 +8,7 @@ Multiple tags use AND semantics (every requested tag must be present).
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
-
+from dataclasses import dataclass
 
 REDACTED = "<redacted>"
 

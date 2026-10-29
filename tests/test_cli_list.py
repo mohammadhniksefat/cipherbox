@@ -3,11 +3,8 @@
 import argparse
 import json
 
-import pytest
-
 from cipherbox.cli.list import list_command
 from cipherbox.domain.entry import Entry
-from cipherbox.errors import DuplicateIdError
 from cipherbox.storage.repository import VaultRepository
 
 

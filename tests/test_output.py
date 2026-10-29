@@ -6,7 +6,14 @@ from cipherbox.domain.entry import Entry
 from cipherbox.services.output import REDACTED, format_json, format_table
 
 
-def _make_entry(entry_id, type="login", title="x", tags=(), fields=None, updated="2026-01-01T00:00:00Z"):
+def _make_entry(
+    entry_id,
+    type="login",
+    title="x",
+    tags=(),
+    fields=None,
+    updated="2026-01-01T00:00:00Z",
+):
     return Entry(
         id=entry_id,
         schema_version=1,
@@ -21,7 +28,13 @@ def _make_entry(entry_id, type="login", title="x", tags=(), fields=None, updated
 
 def test_table_output_contains_metadata_columns():
     entries = [
-        _make_entry("id-1", type="login", title="github", tags=("dev",), fields={"username": "alice"}),
+        _make_entry(
+            "id-1",
+            type="login",
+            title="github",
+            tags=("dev",),
+            fields={"username": "alice"},
+        ),
     ]
     out = format_table(entries)
     assert "id-1" in out

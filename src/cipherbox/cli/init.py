@@ -6,7 +6,7 @@ import argparse
 import sys
 from pathlib import Path
 
-from cipherbox.config.paths import VaultConfig, default_vault_dir
+from cipherbox.config.paths import default_vault_dir
 from cipherbox.errors import VaultError
 from cipherbox.storage.repository import VaultRepository
 

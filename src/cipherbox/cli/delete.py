@@ -9,7 +9,9 @@ from cipherbox.errors import MissingEntryError, VaultError
 from cipherbox.storage.repository import VaultRepository
 
 
-def delete_command(args: argparse.Namespace, repo: VaultRepository | None = None) -> int:
+def delete_command(
+    args: argparse.Namespace, repo: VaultRepository | None = None
+) -> int:
     """Delete an entry. Requires confirmation unless explicitly overridden."""
     if repo is None:
         from cipherbox.config.paths import default_vault_dir

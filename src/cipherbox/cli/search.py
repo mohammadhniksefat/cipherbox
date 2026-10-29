@@ -10,7 +10,9 @@ from cipherbox.services.query import EntryQuery, query_entries
 from cipherbox.storage.repository import VaultRepository
 
 
-def search_command(args: argparse.Namespace, repo: VaultRepository | None = None) -> int:
+def search_command(
+    args: argparse.Namespace, repo: VaultRepository | None = None
+) -> int:
     """Search entries by text across the configured fields and print results."""
     if repo is None:
         from cipherbox.config.paths import default_vault_dir
@@ -18,7 +20,11 @@ def search_command(args: argparse.Namespace, repo: VaultRepository | None = None
         repo = VaultRepository(default_vault_dir())
 
     query = args.query
-    search_in = tuple(part.strip() for part in getattr(args, "in", "title,fields,tags").split(",") if part.strip())
+    search_in = tuple(
+        part.strip()
+        for part in getattr(args, "in", "title,fields,tags").split(",")
+        if part.strip()
+    )
 
     entry_query = EntryQuery(
         type=getattr(args, "type", None),

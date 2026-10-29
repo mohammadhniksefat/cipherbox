@@ -1,12 +1,12 @@
 """Tests for the domain model: Entry, secret types, and validation."""
 
 from cipherbox.domain.entry import (
-    Entry,
     SCHEMA_VERSION,
     SECRET_TYPES,
-    validate_entry,
+    Entry,
     entry_from_dict,
     entry_to_dict,
+    validate_entry,
 )
 from cipherbox.errors import InvalidEntryError
 

@@ -2,8 +2,6 @@
 
 import argparse
 
-import pytest
-
 from cipherbox.cli.add import add_command
 from cipherbox.domain.entry import Entry
 from cipherbox.errors import DuplicateIdError

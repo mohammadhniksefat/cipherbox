@@ -3,9 +3,9 @@
 Local-first CLI secrets manager. Stores one JSON file per secret in a local
 vault directory.
 
-**Status:** Phase 1 (plaintext storage engine and CRUD) complete. Plaintext is
-a development prototype only — do not migrate real credentials into an
-unencrypted vault.
+**Status:** Phase 3 (encryption at rest) complete. Entry files are stored as
+authenticated AES-GCM envelopes derived from a master password via Argon2id.
+Plaintext Phase 1 vaults remain readable for backward compatibility.
 
 ## Install
 
@@ -68,20 +68,61 @@ of filenames; timestamps are UTC.
 
 ```
 <vault>/
-├── config.json        # vault configuration
+├── config.json        # vault configuration (includes encryption metadata when encrypted)
 └── entries/           # one JSON file per entry
-    └── <uuid>.json
+    └── <uuid>.json    # AES-GCM encrypted envelope when the vault is encrypted
 ```
+
+Each entry file is either a plaintext JSON object (backward-compatible Phase 1
+vaults) or an encrypted envelope (`cipherbox-vault-enc/1`) with base64 fields
+`format`, `algorithm`, `nonce`, `aad`, and `ciphertext`. Entry fields are never
+written to disk in plaintext once the vault is encrypted.
 
 Writes are atomic (temp file + replace in the same directory).
 
+## Encryption at rest
+
+`vault init` creates the vault directory and `config.json`. Encryption metadata
+(`encrypted=true`, `kdf`, `kdf_params`, random base64 `salt`) is persisted into
+`config.json` when the repository is bound with a derived master key. From then on,
+every data-accessing command (`add`, `list`, `search`, `show`, `get`, `edit`,
+`delete`) reads the master password through a hidden `getpass` prompt — it is
+never accepted as a CLI argument — derives a key with Argon2id (`argon2id`,
+default `time_cost=3`, `memory_cost=65536`, `parallelism=4`, `hash_len=32`), and
+holds it only in memory for the duration of the command.
+
+Entry files are AES-256-GCM encrypted envelopes with a fresh 12-byte random
+nonce per write. Critical metadata (format, algorithm, schema version) is
+authenticated as associated data (AAD), so any tampering with the envelope is
+rejected — never silently decoded. Wrong password or a locked vault fails
+closed: the command errors out and no plaintext is returned.
+
+### `vault password change`
+
+```bash
+vault password change --path ./my-vault --confirm
+```
+
+Prompts for the old password (hidden), unlocks and reads every entry, prompts
+for the new password (hidden, with confirmation), derives a new key with a
+fresh random salt, re-encrypts every entry, updates the vault config metadata,
+and zeroizes the old key. After the change, the old password no longer unlocks
+the vault and the new password does, with all entry contents intact.
+
 ## Security notes
 
-- Phase 1 stores entries **in plaintext**. This is a development prototype
-  for validating the storage model, not the final default.
-- Encryption at rest (master password + Argon2id + authenticated encryption)
-  is planned for Phase 3.
-- Never store real credentials in an unencrypted vault.
+- Entry files are **authenticated AES-GCM envelopes**, never plaintext, once
+  the vault is encrypted. Plaintext Phase 1 vaults remain readable for
+  backward compatibility.
+- The master password is read through a hidden prompt only; it is never logged,
+  never written to disk, and never accepted as a CLI argument.
+- Key material is held only in memory for the duration of the command and is
+  zeroized (best-effort) before exit.
+- Wrong password or a locked vault fails closed — no partial plaintext, no
+  silent fallback.
+- Never store real credentials in a vault you have not verified is encrypted.
+
+## Listing and search
 
 ## Listing and search
 

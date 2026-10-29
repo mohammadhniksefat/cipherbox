@@ -19,7 +19,9 @@ def edit_command(args: argparse.Namespace, repo: VaultRepository | None = None) 
     field_updates: dict[str, str] = {}
     for item in getattr(args, "field", []) or []:
         if "=" not in item:
-            print(f"error: invalid field spec {item!r} (use key=value)", file=sys.stderr)
+            print(
+                f"error: invalid field spec {item!r} (use key=value)", file=sys.stderr
+            )
             return 2
         key, _, value = item.partition("=")
         field_updates[key.strip()] = value.strip()

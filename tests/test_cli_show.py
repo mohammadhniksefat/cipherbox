@@ -2,8 +2,8 @@
 
 import argparse
 
-from cipherbox.domain.entry import Entry
 from cipherbox.cli.show import show_command
+from cipherbox.domain.entry import Entry
 from cipherbox.storage.repository import VaultRepository
 
 

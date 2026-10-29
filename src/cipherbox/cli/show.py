@@ -5,7 +5,6 @@ from __future__ import annotations
 import argparse
 import sys
 
-from cipherbox.domain.entry import Entry
 from cipherbox.errors import MissingEntryError, VaultError
 from cipherbox.storage.repository import VaultRepository
 
@@ -35,7 +34,9 @@ def show_command(args: argparse.Namespace, repo: VaultRepository | None = None) 
     if entry.fields:
         print("fields:")
         for key in sorted(entry.fields):
-            value = entry.fields[key] if getattr(args, "reveal", False) else "<redacted>"
+            value = (
+                entry.fields[key] if getattr(args, "reveal", False) else "<redacted>"
+            )
             print(f"  {key}: {value}")
     else:
         print("fields: (none)")

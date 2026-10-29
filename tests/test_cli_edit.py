@@ -2,8 +2,8 @@
 
 import argparse
 
-from cipherbox.domain.entry import Entry
 from cipherbox.cli.edit import edit_command
+from cipherbox.domain.entry import Entry
 from cipherbox.storage.repository import VaultRepository
 
 
@@ -41,7 +41,5 @@ def test_edit_updates_fields_and_refreshes_updated_at(tmp_path):
 def test_edit_missing_entry_returns_nonzero(tmp_path):
     repo = VaultRepository(tmp_path)
     repo.init(confirm=True)
-    code = edit_command(
-        argparse.Namespace(id="nope", field=["x=y"]), repo=repo
-    )
+    code = edit_command(argparse.Namespace(id="nope", field=["x=y"]), repo=repo)
     assert code != 0
