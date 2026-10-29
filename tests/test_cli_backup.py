@@ -1,7 +1,6 @@
 """Tests for the `vault backup` and `vault restore` CLI commands."""
 
 import argparse
-import json
 
 from cipherbox.__main__ import main
 
@@ -106,7 +105,15 @@ def test_backup_restore_invalid_backup_fails(tmp_path, capsys):
     backup_dir = tmp_path / "backups"
 
     code = main(
-        ["backup", "restore", "no-such-id", "--path", str(vault_dir), "--backup-dir", str(backup_dir)]
+        [
+            "backup",
+            "restore",
+            "no-such-id",
+            "--path",
+            str(vault_dir),
+            "--backup-dir",
+            str(backup_dir),
+        ]
     )
     assert code != 0
     err = capsys.readouterr().err

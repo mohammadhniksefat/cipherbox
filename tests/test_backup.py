@@ -1,11 +1,9 @@
 """Tests for the backup service."""
 
 import json
-from pathlib import Path
 
 from cipherbox.backup import (
     create_backup,
-    default_backup_dir,
     list_backups,
     restore_backup,
     validate_backup,
@@ -59,7 +57,9 @@ def test_create_backup_returns_id_and_records_metadata(tmp_path):
     backup_dir = tmp_path / "backups"
 
     backup_id = create_backup(vault_dir, backup_dir=backup_dir)
-    meta = json.loads((backup_dir / backup_id / "backup.json").read_text(encoding="utf-8"))
+    meta = json.loads(
+        (backup_dir / backup_id / "backup.json").read_text(encoding="utf-8")
+    )
     assert meta["id"] == backup_id
     assert meta["entry_count"] == 3
     assert meta["vault_dir"] == str(vault_dir)

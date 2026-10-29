@@ -56,7 +56,9 @@ def backup_create_command(args: argparse.Namespace) -> int:
 
     vault_path = Path(getattr(args, "path", None) or default_vault_dir())
     try:
-        backup_id = create_backup(vault_path, backup_dir=getattr(args, "backup_dir", None))
+        backup_id = create_backup(
+            vault_path, backup_dir=getattr(args, "backup_dir", None)
+        )
     except VaultError as exc:
         print(f"error: {exc}", file=sys.stderr)
         return exc.exit_code
@@ -118,4 +120,3 @@ def backup_restore_command(args: argparse.Namespace) -> int:
     else:
         print(f"Restored backup {args.backup_id} into {vault_path}")
     return 0
-

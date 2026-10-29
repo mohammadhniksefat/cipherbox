@@ -184,7 +184,7 @@ class VaultRepository:
                 continue
             existing = by_id.get(entry.id)
             if existing is not None:
-                other_entry, other_path = existing
+                _other_entry, other_path = existing
                 raise ConflictError(
                     f"entry id {entry.id!r} exists in {path} and {other_path}; "
                     "conflicting copies preserved for manual recovery"

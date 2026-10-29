@@ -18,7 +18,6 @@ import uuid
 from datetime import UTC, datetime
 from pathlib import Path
 
-
 CONFIG_FILE_NAME = "config.json"
 ENTRIES_DIR_NAME = "entries"
 BACKUP_META_NAME = "backup.json"
@@ -37,9 +36,7 @@ def _read_json(path: Path) -> dict:
     return json.loads(path.read_text(encoding="utf-8"))
 
 
-def create_backup(
-    vault_dir: str | Path, backup_dir: str | Path | None = None
-) -> str:
+def create_backup(vault_dir: str | Path, backup_dir: str | Path | None = None) -> str:
     """Create a snapshot of the vault and return its backup id.
 
     The backup id is a UUID4. The backup directory layout is::
@@ -54,7 +51,9 @@ def create_backup(
     active vault, so backups live outside the active vault by default.
     """
     vault_dir = Path(vault_dir)
-    target_backup_dir = Path(backup_dir) if backup_dir is not None else default_backup_dir(vault_dir)
+    target_backup_dir = (
+        Path(backup_dir) if backup_dir is not None else default_backup_dir(vault_dir)
+    )
 
     backup_id = str(uuid.uuid4())
     backup_root = target_backup_dir / backup_id
@@ -105,9 +104,7 @@ def list_backups(backup_dir: str | Path | None = None) -> list[dict]:
     return backups
 
 
-def validate_backup(
-    backup_id: str, backup_dir: str | Path | None = None
-) -> bool:
+def validate_backup(backup_id: str, backup_dir: str | Path | None = None) -> bool:
     """Return True if the backup's metadata, config, and entries all parse.
 
     A backup is considered restorable only when ``backup.json``,
