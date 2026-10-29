@@ -9,6 +9,7 @@ from cipherbox.cli.add import add_command
 from cipherbox.cli.delete import delete_command
 from cipherbox.cli.edit import edit_command
 from cipherbox.cli.init import init_command
+from cipherbox.cli.list import list_command
 from cipherbox.cli.show import show_command
 from cipherbox.config.paths import default_vault_dir
 from cipherbox.errors import EXIT_OK
@@ -26,6 +27,56 @@ def build_parser() -> argparse.ArgumentParser:
     p_init.add_argument("--path", default=None, help="Vault directory path.")
     p_init.add_argument(
         "--confirm", action="store_true", help="Overwrite an existing vault."
+    )
+
+    p_list = subparsers.add_parser("list", help="List vault entries with filters.")
+    p_list.add_argument("--path", default=None, help="Vault directory path.")
+    p_list.add_argument("--type", default=None, help="Filter by entry type.")
+    p_list.add_argument(
+        "--tag",
+        action="append",
+        default=[],
+        help="Filter by tag (repeatable; uses AND semantics).",
+    )
+    p_list.add_argument("--title", default=None, help="Filter by exact title match.")
+    p_list.add_argument(
+        "--field",
+        action="append",
+        default=[],
+        help="Field to constrain (repeatable; pair with --equals or --contains).",
+    )
+    p_list.add_argument(
+        "--equals",
+        action="append",
+        default=[],
+        help="Exact value for the corresponding --field (repeatable).",
+    )
+    p_list.add_argument(
+        "--contains",
+        action="append",
+        default=[],
+        help="Substring value for the corresponding --field (repeatable).",
+    )
+    p_list.add_argument(
+        "--sort",
+        default="title",
+        choices=["title", "created", "updated"],
+        help="Sort by title, created, or updated.",
+    )
+    p_list.add_argument(
+        "--limit", type=int, default=None, help="Maximum number of entries to return."
+    )
+    p_list.add_argument(
+        "--offset", type=int, default=0, help="Number of entries to skip."
+    )
+    p_list.add_argument(
+        "--output",
+        default="table",
+        choices=["table", "json"],
+        help="Output format.",
+    )
+    p_list.add_argument(
+        "--reveal", action="store_true", help="Reveal secret field values."
     )
 
     p_add = subparsers.add_parser("add", help="Add a new entry to the vault.")
@@ -84,6 +135,8 @@ def main(argv: list[str] | None = None) -> int:
         return init_command(args)
     if args.command == "add":
         return add_command(args, repo=_repo(args))
+    if args.command == "list":
+        return list_command(args, repo=_repo(args))
     if args.command == "show":
         return show_command(args, repo=_repo(args))
     if args.command == "edit":
