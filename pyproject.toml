@@ -13,6 +13,10 @@ readme = "README.md"
 [project.scripts]
 vault = "cipherbox.__main__:main"
 
+[project.dependencies]
+argon2-cffi = ">=23.1.0"
+cryptography = ">=42.0.0"
+
 [project.optional-dependencies]
 dev = [
     "pytest>=8.0",
