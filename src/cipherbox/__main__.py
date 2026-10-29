@@ -10,6 +10,7 @@ from cipherbox.cli.delete import delete_command
 from cipherbox.cli.edit import edit_command
 from cipherbox.cli.init import init_command
 from cipherbox.cli.list import list_command
+from cipherbox.cli.search import search_command
 from cipherbox.cli.show import show_command
 from cipherbox.config.paths import default_vault_dir
 from cipherbox.errors import EXIT_OK
@@ -79,6 +80,43 @@ def build_parser() -> argparse.ArgumentParser:
         "--reveal", action="store_true", help="Reveal secret field values."
     )
 
+    p_search = subparsers.add_parser("search", help="Search vault entries by text.")
+    p_search.add_argument("--path", default=None, help="Vault directory path.")
+    p_search.add_argument("query", help="Text query (case-insensitive partial match).")
+    p_search.add_argument(
+        "--in",
+        default="title,fields,tags",
+        help="Comma-separated fields to search: title, fields, tags.",
+    )
+    p_search.add_argument("--type", default=None, help="Filter by entry type.")
+    p_search.add_argument(
+        "--tag",
+        action="append",
+        default=[],
+        help="Filter by tag (repeatable; uses AND semantics).",
+    )
+    p_search.add_argument(
+        "--sort",
+        default="title",
+        choices=["title", "created", "updated"],
+        help="Sort by title, created, or updated.",
+    )
+    p_search.add_argument(
+        "--limit", type=int, default=None, help="Maximum number of entries to return."
+    )
+    p_search.add_argument(
+        "--offset", type=int, default=0, help="Number of entries to skip."
+    )
+    p_search.add_argument(
+        "--output",
+        default="table",
+        choices=["table", "json"],
+        help="Output format.",
+    )
+    p_search.add_argument(
+        "--reveal", action="store_true", help="Reveal secret field values."
+    )
+
     p_add = subparsers.add_parser("add", help="Add a new entry to the vault.")
     p_add.add_argument("--path", default=None, help="Vault directory path.")
     p_add.add_argument("--type", required=True, help="Secret type.")
@@ -137,6 +175,8 @@ def main(argv: list[str] | None = None) -> int:
         return add_command(args, repo=_repo(args))
     if args.command == "list":
         return list_command(args, repo=_repo(args))
+    if args.command == "search":
+        return search_command(args, repo=_repo(args))
     if args.command == "show":
         return show_command(args, repo=_repo(args))
     if args.command == "edit":
