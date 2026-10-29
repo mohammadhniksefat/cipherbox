@@ -60,11 +60,28 @@ vault show --path ./my-vault <entry-id> --reveal
 # Edit an entry (id and created_at are preserved)
 vault edit --path ./my-vault <entry-id> --field password=newpass
 
+# Edit an entry (id and created_at are preserved)
+vault edit --path ./my-vault <entry-id> --field password=newpass
+
 # Delete an entry (confirmation required)
-vault delete --path --path ./my-vault <entry-id> --confirm
+vault delete --path ./my-vault <entry-id> --confirm
+
+# List entries (redacted table by default)
+vault list --path ./my-vault
+vault list --path ./my-vault --type api-key --tag development --output json
+
+# Search entries by text (case-insensitive across title, fields, tags)
+vault search --path ./my-vault "github"
+vault search --path ./my-vault "staging" --in fields --output json
 ```
 
 If `--path` is omitted, the default vault location is used.
+
+## Phase status
+
+**Phase 2 (search, filtering, and developer querying) complete.** Plaintext is a
+development prototype only — do not migrate real credentials into an
+unencrypted vault. Encryption at rest is planned for Phase 3.
 
 ## Secret types
 

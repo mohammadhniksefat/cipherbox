@@ -14,12 +14,13 @@ directory.
 
 ## Current status
 
-**Phase 1 (plaintext storage engine and CRUD) complete.** Plaintext is a
+**Phase 2 (search, filtering, and developer querying) complete.** Plaintext is a
 development prototype only — do not migrate real credentials into an
 unencrypted vault. Encryption at rest is planned for Phase 3.
 
 ## Commands available
 
-`vault init`, `vault add`, `vault show`, `vault edit`, `vault delete`
+`vault init`, `vault add`, `vault show`, `vault edit`, `vault delete`,
+`vault list`, `vault search`
 
 Run `vault --help` or `python -m cipherbox --help` for inline help.
