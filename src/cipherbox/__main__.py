@@ -7,6 +7,12 @@ import sys
 from pathlib import Path
 
 from cipherbox.cli.add import add_command
+from cipherbox.cli.backup import _build_parser as _build_backup_parser
+from cipherbox.cli.backup import (
+    backup_create_command,
+    backup_list_command,
+    backup_restore_command,
+)
 from cipherbox.cli.delete import delete_command
 from cipherbox.cli.edit import edit_command
 from cipherbox.cli.init import init_command
@@ -164,6 +170,8 @@ def build_parser() -> argparse.ArgumentParser:
         "--confirm", action="store_true", help=argparse.SUPPRESS
     )
 
+    _build_backup_parser(subparsers)
+
     return parser
 
 
@@ -236,6 +244,13 @@ def main(argv: list[str] | None = None) -> int:
             return delete_command(args, repo=_repo(args))
         if args.command == "password":
             return password_change_command(args, repo=_repo(args))
+        if args.command == "backup":
+            if args.backup_command == "create":
+                return backup_create_command(args)
+            if args.backup_command == "list":
+                return backup_list_command(args)
+            if args.backup_command == "restore":
+                return backup_restore_command(args)
     except VaultError as exc:
         print(f"error: {exc}", file=sys.stderr)
         return exc.exit_code
