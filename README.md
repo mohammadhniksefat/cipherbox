@@ -42,6 +42,14 @@ vault edit --path ./my-vault <entry-id> --field password=newpass
 
 # Delete an entry (confirmation required)
 vault delete --path ./my-vault <entry-id> --confirm
+
+# List entries, redacted table by default
+vault list --path ./my-vault
+vault list --path ./my-vault --type api-key --tag development --output json
+
+# Search entries by text across title, fields, and tags (case-insensitive)
+vault search --path ./my-vault "github"
+vault search --path ./my-vault "staging" --in fields --output json
 ```
 
 If `--path` is omitted, the default vault location is used
@@ -75,6 +83,33 @@ Writes are atomic (temp file + replace in the same directory).
   is planned for Phase 3.
 - Never store real credentials in an unencrypted vault.
 
+## Listing and search
+
+```bash
+# List all entries (redacted table)
+vault list --path ./my-vault
+
+# Filter by type and tags (AND semantics: entry must carry every --tag)
+vault list --path ./my-vault --type api-key --tag development
+
+# Exact title match
+vault list --path ./my-vault --title github
+
+# Field query against typed entry data
+vault list --path ./my-vault --field provider --equals openai
+vault list --path ./my-vault --field hostname --contains staging
+
+# Sort and paginate
+vault list --path ./my-vault --sort updated --limit 10 --offset 0
+
+# Machine-readable JSON output (secret values redacted unless --reveal)
+vault list --path ./my-vault --output json --reveal
+
+# Text search (case-insensitive partial match across title, fields, tags)
+vault search --path ./my-vault "github"
+vault search --path ./my-vault "staging" --in fields --output json
+```
+
 ## Development
 
 ```bash
@@ -94,7 +129,7 @@ The project is developed in phases (see `docs/project-spec.md`):
 
 1. Foundation (structure, formats, contracts)
 2. Storage and CRUD (plaintext prototype) — **complete**
-3. Search and filtering
+3. Search and filtering — **complete**
 4. Encryption at rest
 5. Safe writes and synchronization compatibility
 6. Import, export, and portability
