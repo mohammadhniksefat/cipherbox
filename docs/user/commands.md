@@ -143,6 +143,42 @@ vault list --path ./my-vault --type api-key --tag development --output json
 
 Filters on different dimensions use AND semantics. Text search across title, fields, and tags is available via `vault search`.
 
+## `vault backup`
+
+Create, list, and restore vault backups. Backups are stored outside the active vault by default (a `<vault>-backups` sibling directory) and include `config.json` plus every entry file.
+
+```bash
+# Create a snapshot of the vault
+vault backup create --path ./my-vault --backup-dir ./my-backups
+
+# List available backups
+vault backup list --path ./my-vault --backup-dir ./my-backups
+
+# Restore a backup (non-destructive: refuses to overwrite existing entry files)
+vault restore <backup-id> --path ./my-vault --backup-dir ./my-backups
+
+# Preview what would be restored without writing
+vault restore <backup-id> --path ./my-vault --backup-dir ./my-backups --dry-run
+```
+
+| Argument | Description |
+|----------|-------------|
+| `--path` | Vault directory path |
+| `--backup-dir` | Directory to store/read backups (default: `<vault>-backups` sibling) |
+| `<backup-id>` | Backup id to restore (required for `restore`) |
+| `--dry-run` | Validate and report what would be restored without writing (restore only) |
+
+`vault backup create` prints the new backup id. `vault restore` validates the
+backup before restoring and never overwrites an entry file that already exists
+in the active vault.
+
+## Conflict handling
+
+If two entry files resolve to the same stable entry ID (a synchronization
+conflict), `vault list` raises a conflict error naming both files — neither
+copy is silently dropped or merged. Use `vault backup` / `vault restore` to
+recover manually.
+
 ## `vault search`
 
 Search vault entries by text across title, fields, and tags (case-insensitive partial match).

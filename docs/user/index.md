@@ -14,13 +14,12 @@ directory.
 
 ## Current status
 
-**Phase 2 (search, filtering, and developer querying) complete.** Plaintext is a
-development prototype only — do not migrate real credentials into an
-unencrypted vault. Encryption at rest is planned for Phase 3.
+**Phase 4 (safe writes, recovery, and external modification handling) complete.** Entry files are stored as authenticated AES-GCM envelopes derived from a master password via Argon2id. Writes are atomic; duplicate entry IDs across files are detected as sync conflicts and never silently resolved; backups and restore are available via `vault backup` / `vault restore`. Plaintext Phase 1 vaults remain readable for backward compatibility.
 
 ## Commands available
 
 `vault init`, `vault add`, `vault show`, `vault edit`, `vault delete`,
-`vault list`, `vault search`
+`vault list`, `vault search`, `vault backup`, `vault restore`,
+`vault password change`
 
 Run `vault --help` or `python -m cipherbox --help` for inline help.

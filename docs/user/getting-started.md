@@ -73,15 +73,18 @@ vault list --path ./my-vault --type api-key --tag development --output json
 # Search entries by text (case-insensitive across title, fields, tags)
 vault search --path ./my-vault "github"
 vault search --path ./my-vault "staging" --in fields --output json
+
+# Back up and restore the vault
+vault backup create --path ./my-vault --backup-dir ./my-backups
+vault backup list --path ./my-vault --backup-dir ./my-backups
+vault restore <backup-id> --path ./my-vault --backup-dir ./my-backups --dry-run
 ```
 
 If `--path` is omitted, the default vault location is used.
 
 ## Phase status
 
-**Phase 2 (search, filtering, and developer querying) complete.** Plaintext is a
-development prototype only — do not migrate real credentials into an
-unencrypted vault. Encryption at rest is planned for Phase 3.
+**Phase 4 (safe writes, recovery, and external modification handling) complete.** Entry files are stored as authenticated AES-GCM envelopes derived from a master password via Argon2id. Writes are atomic; duplicate entry IDs across files are detected as sync conflicts; backups and restore are available via `vault backup` / `vault restore`. Plaintext Phase 1 vaults remain readable for backward compatibility.
 
 ## Secret types
 
@@ -100,7 +103,9 @@ of filenames; timestamps are UTC.
     └── <uuid>.json
 ```
 
-Writes are atomic (temp file + replace in the same directory).
+Writes are atomic (temp file + fsync + replace in the same directory).
+Duplicate entry IDs across files are detected as sync conflicts and never
+silently resolved.
 
 ## Security notes
 
