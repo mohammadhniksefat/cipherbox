@@ -11,6 +11,7 @@ from cipherbox.cli.delete import delete_command
 from cipherbox.cli.edit import edit_command
 from cipherbox.cli.init import init_command
 from cipherbox.cli.list import list_command
+from cipherbox.cli.password import password_change_command
 from cipherbox.cli.search import search_command
 from cipherbox.cli.show import show_command
 from cipherbox.config.paths import default_vault_dir
@@ -153,6 +154,16 @@ def build_parser() -> argparse.ArgumentParser:
         "--confirm", action="store_true", help="Confirm the deletion."
     )
 
+    p_password = subparsers.add_parser("password", help="Password management.")
+    p_password_sub = p_password.add_subparsers(dest="password_command")
+    p_password_change = p_password_sub.add_parser(
+        "change", help="Change the vault master password."
+    )
+    p_password_change.add_argument("--path", default=None, help="Vault directory path.")
+    p_password_change.add_argument(
+        "--confirm", action="store_true", help=argparse.SUPPRESS
+    )
+
     return parser
 
 
@@ -175,7 +186,10 @@ def _repo(args) -> VaultRepository:
 
     vault_path = Path(getattr(args, "path", None) or default_vault_dir())
 
-    if args.command == "init":
+    # ``init`` creates the vault (no prompt). ``password change`` manages
+    # its own unlock flow (old password, then new password + confirmation),
+    # so it must not be auto-unlocked here.
+    if args.command in ("init", "password"):
         return VaultRepository(vault_path)
 
     try:
@@ -220,6 +234,8 @@ def main(argv: list[str] | None = None) -> int:
             return edit_command(args, repo=_repo(args))
         if args.command == "delete":
             return delete_command(args, repo=_repo(args))
+        if args.command == "password":
+            return password_change_command(args, repo=_repo(args))
     except VaultError as exc:
         print(f"error: {exc}", file=sys.stderr)
         return exc.exit_code
