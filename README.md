@@ -3,9 +3,13 @@
 Local-first CLI secrets manager. Stores one JSON file per secret in a local
 vault directory.
 
-**Status:** Phase 3 (encryption at rest) complete. Entry files are stored as
-authenticated AES-GCM envelopes derived from a master password via Argon2id.
-Plaintext Phase 1 vaults remain readable for backward compatibility.
+**Status:** Phase 4 (safe writes, recovery, and external modification handling) complete.
+Entry files are stored as authenticated AES-GCM envelopes derived from a master
+password via Argon2id. Writes are atomic (temp file + fsync + replace in the
+same directory). Duplicate entry IDs across files are detected as sync
+conflicts and never silently resolved. Backups and restore are available via
+`vault backup` / `vault restore`. Plaintext Phase 1 vaults remain readable for
+backward compatibility.
 
 ## Install
 
@@ -79,6 +83,35 @@ vaults) or an encrypted envelope (`cipherbox-vault-enc/1`) with base64 fields
 written to disk in plaintext once the vault is encrypted.
 
 Writes are atomic (temp file + replace in the same directory).
+
+## Backup and restore
+
+```bash
+# Create a snapshot of the vault (stored outside the active vault by default)
+vault backup create --path ./my-vault --backup-dir ./my-backups
+
+# List available backups
+vault backup list --path ./my-vault --backup-dir ./my-backups
+
+# Restore a backup (non-destructive: refuses to overwrite existing entry files)
+vault restore <backup-id> --path ./my-vault --backup-dir ./my-backups
+
+# Preview what would be restored without writing
+vault restore <backup-id> --path ./my-vault --backup-dir ./my-backups --dry-run
+```
+
+`vault backup create` snapshots `config.json` plus every entry file into a
+timestamped directory under the backup dir (default: `./my-vault-backups`).
+`vault restore` validates the backup before restoring and never overwrites an
+entry file that already exists in the active vault — use `--dry-run` to preview
+without writing.
+
+## Conflict handling
+
+If two entry files resolve to the same stable ID (a synchronization conflict),
+`vault list` raises a conflict error naming both files — neither copy is
+silently dropped. Use `vault backup` / `vault restore` to recover manually.
+Automatic merging is not performed.
 
 ## Encryption at rest
 
@@ -168,11 +201,11 @@ The project follows a modular Python layout under `src/cipherbox/`
 
 The project is developed in phases (see `docs/project-spec.md`):
 
-1. Foundation (structure, formats, contracts)
+1. Foundation (structure, formats, contracts) — **complete**
 2. Storage and CRUD (plaintext prototype) — **complete**
 3. Search and filtering — **complete**
-4. Encryption at rest
-5. Safe writes and synchronization compatibility
+4. Encryption at rest — **complete**
+5. Safe writes and synchronization compatibility — **complete**
 6. Import, export, and portability
 7. Release hardening
 
