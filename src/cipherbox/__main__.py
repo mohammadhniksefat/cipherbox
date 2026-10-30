@@ -14,6 +14,7 @@ from cipherbox.cli.backup import (
     backup_restore_command,
 )
 from cipherbox.cli.check import check_command, doctor_command
+from cipherbox.cli.copy import copy_command
 from cipherbox.cli.delete import delete_command
 from cipherbox.cli.edit import edit_command
 from cipherbox.cli.env import env_export_command, env_list_command
@@ -215,6 +216,13 @@ def build_parser() -> argparse.ArgumentParser:
     p_doctor = subparsers.add_parser("doctor", help="Diagnose vault configuration and permissions.")
     p_doctor.add_argument("--path", default=None, help="Vault directory path.")
 
+    p_copy = subparsers.add_parser("copy", help="Copy an entry's field value to the clipboard.")
+    p_copy.add_argument("--path", default=None, help="Vault directory path.")
+    p_copy.add_argument("id", help="Entry id.")
+    p_copy.add_argument(
+        "--field", required=True, help="Field whose value to copy to the clipboard."
+    )
+
     _build_backup_parser(subparsers)
 
     from cipherbox.cli.export import _build_parser as _build_export_parser
@@ -307,6 +315,8 @@ def main(argv: list[str] | None = None) -> int:
             return check_command(args)
         if args.command == "doctor":
             return doctor_command(args)
+        if args.command == "copy":
+            return copy_command(args, repo=_repo(args))
         if args.command == "backup":
             if args.backup_command == "create":
                 return backup_create_command(args)
