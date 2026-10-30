@@ -17,6 +17,7 @@ from cipherbox.cli.delete import delete_command
 from cipherbox.cli.edit import edit_command
 from cipherbox.cli.env import env_export_command, env_list_command
 from cipherbox.cli.export import export_command
+from cipherbox.cli.generate import generate_password_command
 from cipherbox.cli.get import get_command
 from cipherbox.cli.import_ import import_command
 from cipherbox.cli.init import init_command
@@ -184,6 +185,26 @@ def build_parser() -> argparse.ArgumentParser:
         "--confirm", action="store_true", help=argparse.SUPPRESS
     )
 
+    p_generate = subparsers.add_parser("generate", help="Generate secrets.")
+    p_generate_sub = p_generate.add_subparsers(dest="generate_command")
+    p_generate_password = p_generate_sub.add_parser(
+        "password", help="Generate a secure password."
+    )
+    p_generate_password.add_argument(
+        "--path", default=None, help="Vault directory path."
+    )
+    p_generate_password.add_argument(
+        "--length",
+        type=int,
+        default=32,
+        help="Password length (default 32).",
+    )
+    p_generate_password.add_argument(
+        "--charset",
+        default="lower,digits",
+        help="Comma-separated charset pool: lower,upper,digits,punctuation.",
+    )
+
     _build_backup_parser(subparsers)
 
     from cipherbox.cli.export import _build_parser as _build_export_parser
@@ -270,6 +291,9 @@ def main(argv: list[str] | None = None) -> int:
             return get_command(args, repo=_repo(args))
         if args.command == "password":
             return password_change_command(args, repo=_repo(args))
+        if args.command == "generate":
+            if args.generate_command == "password":
+                return generate_password_command(args)
         if args.command == "backup":
             if args.backup_command == "create":
                 return backup_create_command(args)
