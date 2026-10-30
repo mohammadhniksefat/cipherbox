@@ -305,4 +305,4 @@ See `docs/release.md` for install and source instructions.
 
 ## License
 
-Personal project. See `CONSTITUTION.md` for community guidelines.
+Personal project.
