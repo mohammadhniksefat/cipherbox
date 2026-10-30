@@ -54,6 +54,16 @@ vault list --path ./my-vault --type api-key --tag development --output json
 # Search entries by text across title, fields, and tags (case-insensitive)
 vault search --path ./my-vault "github"
 vault search --path ./my-vault "staging" --in fields --output json
+
+# Export all entries to a portable JSON document (plaintext: warns on stderr)
+vault export --path ./my-vault --output export.json
+
+# Import entries into a vault (validate-before-write; skip/replace/rename policies)
+vault import export.json --path ./my-vault --policy skip --dry-run
+vault import export.json --path ./my-vault --policy replace
+
+# Export project-tagged entries to a .env file (plaintext: warns on stderr)
+vault env export my-project --path ./my-vault --output .env --confirm
 ```
 
 If `--path` is omitted, the default vault location is used
@@ -105,6 +115,31 @@ timestamped directory under the backup dir (default: `./my-vault-backups`).
 `vault restore` validates the backup before restoring and never overwrites an
 entry file that already exists in the active vault — use `--dry-run` to preview
 without writing.
+
+## Import and export
+
+```bash
+# Export all entries to a portable JSON document (plaintext: warns on stderr)
+vault export --path ./my-vault --output export.json
+
+# Import entries into a vault (validate-before-write; never partially modifies
+# the vault on a bad import; skip/replace/rename collision policies)
+vault import export.json --path ./my-vault --policy skip --dry-run
+vault import export.json --path ./my-vault --policy replace
+
+# Export only entries tagged with a project to a .env file (plaintext: warns
+# on stderr; refuses to overwrite an existing file unless --confirm)
+vault env export my-project --path ./my-vault --output .env --confirm
+```
+
+`vault export` writes a `cipherbox-export/1` document containing every entry's
+supported fields. `vault import` validates every entry before writing anything,
+detects duplicate IDs and title collisions, and supports `--dry-run` to preview
+proposed changes. `vault env export` selects entries explicitly tagged with the
+given project — unrelated secrets are never exported.
+
+Both `vault export` and `vault env export` print a plaintext warning to stderr
+and refuse to overwrite an existing output file unless `--confirm` is passed.
 
 ## Conflict handling
 
@@ -206,7 +241,7 @@ The project is developed in phases (see `docs/project-spec.md`):
 3. Search and filtering — **complete**
 4. Encryption at rest — **complete**
 5. Safe writes and synchronization compatibility — **complete**
-6. Import, export, and portability
+6. Import, export, and portability — **complete**
 7. Release hardening
 
 ## License
