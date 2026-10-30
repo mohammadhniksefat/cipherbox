@@ -9,9 +9,7 @@ from cipherbox.errors import MissingEntryError, VaultError
 from cipherbox.storage.repository import VaultRepository
 
 
-def get_command(
-    args: argparse.Namespace, repo: VaultRepository | None = None
-) -> int:
+def get_command(args: argparse.Namespace, repo: VaultRepository | None = None) -> int:
     """Retrieve an entry's metadata or a single field value.
 
     Without ``--field``, prints entry metadata with field values redacted.

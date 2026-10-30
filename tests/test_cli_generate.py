@@ -7,7 +7,7 @@ from cipherbox.cli.generate import generate_password_command
 
 
 def _args(**kwargs) -> argparse.Namespace:
-    base = dict(length=32, charset="lower,digits")
+    base = {"length": 32, "charset": "lower,digits"}
     base.update(kwargs)
     return argparse.Namespace(**base)
 
@@ -21,7 +21,7 @@ def test_generate_password_length_and_charset(tmp_path, capsys):
 
 
 def test_generate_password_default_length(tmp_path, capsys):
-    base = dict(charset="lower,digits")
+    base = {"charset": "lower,digits"}
     # length omitted on purpose: the command's default should apply.
     code = generate_password_command(argparse.Namespace(**base))
     assert code == 0

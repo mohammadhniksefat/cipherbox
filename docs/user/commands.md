@@ -1,6 +1,6 @@
 # Commands
 
-Reference for the `vault` CLI commands available in Phase 1.
+Reference for the `vault` CLI commands.
 
 ## `vault init`
 
@@ -200,6 +200,133 @@ vault search --path ./my-vault "staging" --in fields --output json
 | `--offset` | Number of entries to skip |
 | `--output` | Output format: `table` (default) or `json` |
 | `--reveal` | Reveal secret field values |
+
+## `vault export`
+
+Export all entries to a portable JSON document (`cipherbox-export/1` schema). Plaintext output — prints a warning to stderr and refuses to overwrite an existing file unless `--confirm` is passed.
+
+```bash
+vault export --path ./my-vault --output export.json
+```
+
+| Argument | Description |
+|----------|-------------|
+| `--path` | Vault directory path |
+| `--output` | Output file path (required) |
+| `--confirm` | Confirm overwrite of an existing output file |
+
+## `vault import`
+
+Import entries from a JSON export file. Validates every entry before writing anything — an invalid import never partially modifies the vault. Detects duplicate IDs and title collisions; supports `--policy skip|replace|rename` and `--dry-run`.
+
+```bash
+vault import export.json --path ./my-vault --policy skip --dry-run
+vault import export.json --path ./my-vault --policy replace
+```
+
+| Argument | Description |
+|----------|-------------|
+| `<file>` | Import file path (required) |
+| `--path` | Vault directory path |
+| `--policy` | Collision policy: `skip`, `replace`, or `rename` (default: `skip`) |
+| `--dry-run` | Report proposed changes without writing anything |
+
+## `vault env export`
+
+Export only entries explicitly tagged with a project to a `.env` file. Plaintext output — prints a warning to stderr and refuses to overwrite an existing file unless `--confirm`.
+
+```bash
+vault env export my-project --path ./my-vault --output .env --confirm
+```
+
+| Argument | Description |
+|----------|-------------|
+| `<project>` | Project tag to select entries for (required) |
+| `--path` | Vault directory path |
+| `--output` | Output `.env` file path (required) |
+| `--confirm` | Confirm overwrite of an existing output file |
+
+## `vault env list`
+
+List entries tagged with a project, with field values redacted.
+
+```bash
+vault env list --path ./my-vault my-project
+```
+
+| Argument | Description |
+|----------|-------------|
+| `<project>` | Project tag to select entries for (required) |
+| `--path` | Vault directory path |
+
+## `vault get`
+
+Retrieve a single secret field value to stdout (explicit retrieval only). Without `--field`, prints entry metadata with field values redacted. Missing entry or field returns a nonzero exit code; secret values are never printed to stderr.
+
+```bash
+vault get --path ./my-vault <entry-id> --field password
+vault get --path ./my-vault <entry-id>
+```
+
+| Argument | Description |
+|----------|-------------|
+| `id` | Entry id (required) |
+| `--path` | Vault directory path |
+| `--field` | Print only this field's value to stdout |
+| `--reveal` | Reveal secret field values in metadata view |
+
+## `vault generate password`
+
+Generate a secure password using a cryptographically secure random-number generator. Never auto-stored.
+
+```bash
+vault generate password --path ./my-vault --length 32
+```
+
+| Argument | Description |
+|----------|-------------|
+| `--path` | Vault directory path |
+| `--length` | Password length (default: `32`) |
+| `--charset` | Comma-separated charset pool: `lower`, `upper`, `digits`, `punctuation` (default: `lower,digits`) |
+
+## `vault check`
+
+Validate the vault: schema validity of every entry, duplicate IDs, malformed files, and encryption metadata status. Distinguishes warnings from errors; never exposes decrypted contents.
+
+```bash
+vault check --path ./my-vault --all
+```
+
+| Argument | Description |
+|----------|-------------|
+| `--path` | Vault directory path |
+| `--all` | Run all available checks |
+
+## `vault doctor`
+
+Diagnose vault configuration and filesystem permission problems.
+
+```bash
+vault doctor --path ./my-vault
+```
+
+| Argument | Description |
+|----------|-------------|
+| `--path` | Vault directory path |
+
+## `vault copy`
+
+Copy a single secret field value to the clipboard. Requires explicit `--field` selection. Prints a warning that clipboard contents may be accessible to other applications; clearing is best-effort and clipboard managers may retain copies.
+
+```bash
+vault copy --path ./my-vault <entry-id> --field token
+```
+
+| Argument | Description |
+|----------|-------------|
+| `id` | Entry id (required) |
+| `--path` | Vault directory path |
+| `--field` | Field whose value to copy (required) |
 
 ## Exit codes
 

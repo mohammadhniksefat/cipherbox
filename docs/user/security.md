@@ -2,35 +2,47 @@
 
 ## Current status
 
-**Phase 1 stores entries in plaintext.** This is a development prototype for
-validating the storage model, not the final default.
+**Encryption at rest is active (Phase 3 complete).** Entry files are stored as
+authenticated AES-GCM envelopes derived from a master password via Argon2id.
+Writes are atomic; duplicate entry IDs across files are detected as sync
+conflicts and never silently resolved; backups and restore are available via
+`vault backup` / `vault restore`. Plaintext Phase 1 vaults remain readable for
+backward compatibility but new vaults are encrypted.
 
-- Do **not** migrate real credentials into an unencrypted vault.
-- Encryption at rest (master password + Argon2id key derivation + authenticated
-  encryption) is planned for Phase 3.
-- The master password will be derived once per command, kept only in memory
-  during process execution, and discarded when the process exits.
+- The master password is read through a hidden `getpass` prompt — never a CLI
+  argument — derived once per command with Argon2id, kept only in memory during
+  process execution, and discarded before exit.
+- Entry files are AES-256-GCM encrypted envelopes with a fresh 12-byte random
+  nonce per write. Critical metadata (format, algorithm, schema version) is
+  authenticated as associated data (AAD), so any tampering with the envelope is
+  rejected — never silently decoded. Wrong password or a locked vault fails
+  closed: the command errors out and no plaintext is returned.
+- Key material is held only in memory for the duration of the command and is
+  zeroized (best-effort) before exit.
+- `vault password change` re-encrypts every entry with a new key and invalidates
+  the old password.
 
-## Threat-model limitations (Phase 1)
+## Threat-model limitations
 
-- Anyone with read access to the vault directory can read all secret values.
-- Secret values are written to disk in plaintext JSON.
+- Anyone with read access to the vault directory can attempt to decrypt entry
+  files; the master password is the sole gate.
 - Terminal history, shell pipelines, and logs may capture explicitly retrieved
-  secret values (e.g. `vault show --reveal`, `vault get`).
+  secret values (e.g. `vault show --reveal`, `vault get`, `vault copy`).
+- Clipboard contents (`vault copy`) may be accessible to other applications;
+  clearing is best-effort and clipboard managers may retain copies.
+- Exported `.env` files and JSON exports store secret values in plaintext;
+  protect them like secrets and never commit them to version control.
+- Deleting an export does not guarantee secure erasure from storage media or
+  backups.
 
-## Best practices while using the plaintext prototype
+## Best practices
 
 - Keep the vault directory on a filesystem you control and restrict its
   permissions.
-- Do not back up plaintext vaults to untrusted locations or sync them to
-  cloud storage without encryption.
-- Treat `vault show --reveal` output as sensitive: avoid redirecting it to
-  files or including it in scripts that log output.
-
-## Planned security (Phase 3)
-
-- Master password prompted (hidden input, never a command-line argument).
-- Argon2id key derivation with random salt.
-- Authenticated encryption for entry files.
-- Secret values hidden by default; revealed only through explicit retrieval.
-- Password changes re-encrypt all entries and invalidate the old password.
+- Do not store real credentials in a vault you have not verified is encrypted.
+- Treat explicitly retrieved values (`vault show --reveal`, `vault get`,
+  `vault copy`) as sensitive: avoid redirecting them to files or including them
+  in scripts that log output.
+- Protect `.env` exports and JSON exports like secrets; never commit them to
+  version control.
+- Keep backups of your vault and store them securely; test restore periodically.

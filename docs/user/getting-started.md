@@ -60,9 +60,6 @@ vault show --path ./my-vault <entry-id> --reveal
 # Edit an entry (id and created_at are preserved)
 vault edit --path ./my-vault <entry-id> --field password=newpass
 
-# Edit an entry (id and created_at are preserved)
-vault edit --path ./my-vault <entry-id> --field password=newpass
-
 # Delete an entry (confirmation required)
 vault delete --path ./my-vault <entry-id> --confirm
 
@@ -74,6 +71,24 @@ vault list --path ./my-vault --type api-key --tag development --output json
 vault search --path ./my-vault "github"
 vault search --path ./my-vault "staging" --in fields --output json
 
+# Retrieve a single secret field value to stdout (explicit retrieval only)
+vault get --path ./my-vault <entry-id> --field password
+
+# List project-tagged env entries (values redacted)
+vault env list --path ./my-vault my-project
+
+# Generate a secure password with a CSPRNG (never auto-stored)
+vault generate password --path ./my-vault --length 32
+
+# Validate the vault: schema, duplicate IDs, malformed files
+vault check --path ./my-vault --all
+
+# Diagnose vault configuration and filesystem permissions
+vault doctor --path ./my-vault
+
+# Copy a secret field value to the clipboard (explicit field required)
+vault copy --path ./my-vault <entry-id> --field token
+
 # Back up and restore the vault
 vault backup create --path ./my-vault --backup-dir ./my-backups
 vault backup list --path ./my-vault --backup-dir ./my-backups
@@ -84,7 +99,7 @@ If `--path` is omitted, the default vault location is used.
 
 ## Phase status
 
-**Phase 4 (safe writes, recovery, and external modification handling) complete.** Entry files are stored as authenticated AES-GCM envelopes derived from a master password via Argon2id. Writes are atomic; duplicate entry IDs across files are detected as sync conflicts; backups and restore are available via `vault backup` / `vault restore`. Plaintext Phase 1 vaults remain readable for backward compatibility.
+**Phase 6 (developer productivity features) complete.** Entry files are stored as authenticated AES-GCM envelopes derived from a master password via Argon2id. Writes are atomic; duplicate entry IDs across files are detected as sync conflicts; backups and restore are available via `vault backup` / `vault restore`. Import/export and environment export are available via `vault export` / `vault import` / `vault env export`. Plaintext Phase 1 vaults remain readable for backward compatibility.
 
 ## Secret types
 

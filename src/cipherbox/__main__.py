@@ -167,7 +167,9 @@ def build_parser() -> argparse.ArgumentParser:
         "--confirm", action="store_true", help="Confirm the deletion."
     )
 
-    p_get = subparsers.add_parser("get", help="Retrieve an entry's field value or metadata.")
+    p_get = subparsers.add_parser(
+        "get", help="Retrieve an entry's field value or metadata."
+    )
     p_get.add_argument("--path", default=None, help="Vault directory path.")
     p_get.add_argument("id", help="Entry id.")
     p_get.add_argument(
@@ -207,16 +209,20 @@ def build_parser() -> argparse.ArgumentParser:
         help="Comma-separated charset pool: lower,upper,digits,punctuation.",
     )
 
-    p_check = subparsers.add_parser("check", help="Validate the vault schema and entries.")
-    p_check.add_argument("--path", default=None, help="Vault directory path.")
-    p_check.add_argument(
-        "--all", action="store_true", help="Run all available checks."
+    p_check = subparsers.add_parser(
+        "check", help="Validate the vault schema and entries."
     )
+    p_check.add_argument("--path", default=None, help="Vault directory path.")
+    p_check.add_argument("--all", action="store_true", help="Run all available checks.")
 
-    p_doctor = subparsers.add_parser("doctor", help="Diagnose vault configuration and permissions.")
+    p_doctor = subparsers.add_parser(
+        "doctor", help="Diagnose vault configuration and permissions."
+    )
     p_doctor.add_argument("--path", default=None, help="Vault directory path.")
 
-    p_copy = subparsers.add_parser("copy", help="Copy an entry's field value to the clipboard.")
+    p_copy = subparsers.add_parser(
+        "copy", help="Copy an entry's field value to the clipboard."
+    )
     p_copy.add_argument("--path", default=None, help="Vault directory path.")
     p_copy.add_argument("id", help="Entry id.")
     p_copy.add_argument(

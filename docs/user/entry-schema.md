@@ -55,3 +55,9 @@ while refreshing `updated_at`.
 
 Entries are stored as one JSON file per entry under `<vault>/entries/<uuid>.json`.
 Writes are atomic (temp file in the same directory, then replace).
+
+Once the vault is encrypted (Phase 3+), entry files are AES-256-GCM encrypted
+envelopes (`cipherbox-vault-enc/1`) with base64 fields `format`, `algorithm`,
+`nonce`, `aad`, and `ciphertext`. Entry fields are never written to disk in
+plaintext once the vault is encrypted. Plaintext Phase 1 vaults remain
+readable for backward compatibility.
