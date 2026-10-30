@@ -17,6 +17,7 @@ from cipherbox.cli.delete import delete_command
 from cipherbox.cli.edit import edit_command
 from cipherbox.cli.env import env_export_command
 from cipherbox.cli.export import export_command
+from cipherbox.cli.get import get_command
 from cipherbox.cli.import_ import import_command
 from cipherbox.cli.init import init_command
 from cipherbox.cli.list import list_command
@@ -163,6 +164,16 @@ def build_parser() -> argparse.ArgumentParser:
         "--confirm", action="store_true", help="Confirm the deletion."
     )
 
+    p_get = subparsers.add_parser("get", help="Retrieve an entry's field value or metadata.")
+    p_get.add_argument("--path", default=None, help="Vault directory path.")
+    p_get.add_argument("id", help="Entry id.")
+    p_get.add_argument(
+        "--field", default=None, help="Print only this field's value to stdout."
+    )
+    p_get.add_argument(
+        "--reveal", action="store_true", help="Reveal secret field values."
+    )
+
     p_password = subparsers.add_parser("password", help="Password management.")
     p_password_sub = p_password.add_subparsers(dest="password_command")
     p_password_change = p_password_sub.add_parser(
@@ -255,6 +266,8 @@ def main(argv: list[str] | None = None) -> int:
             return edit_command(args, repo=_repo(args))
         if args.command == "delete":
             return delete_command(args, repo=_repo(args))
+        if args.command == "get":
+            return get_command(args, repo=_repo(args))
         if args.command == "password":
             return password_change_command(args, repo=_repo(args))
         if args.command == "backup":
