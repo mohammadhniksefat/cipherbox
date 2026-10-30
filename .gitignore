@@ -13,3 +13,6 @@ __pycache__/
 
 # Plan documents (superpowers planning artifacts)
 docs/superpowers/plans/
+
+# Local codebase knowledge graph (excluded by design per CLAUDE.md)
+.codebase-memory/
