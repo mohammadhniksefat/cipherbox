@@ -343,7 +343,7 @@ def main(argv: list[str] | None = None) -> int:
             if args.backup_command == "restore":
                 return backup_restore_command(args)
         if args.command == "export":
-            return export_command(args)
+            return export_command(args, repo=_repo(args))
         if args.command == "import":
             return import_command(args)
         if args.command == "env" and args.env_command == "export":

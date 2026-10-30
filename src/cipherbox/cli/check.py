@@ -9,6 +9,7 @@ import sys
 from pathlib import Path
 
 from cipherbox.config.paths import default_vault_dir, load_config
+from cipherbox.crypto.vault import load_vault_crypto
 from cipherbox.domain.entry import entry_from_dict, validate_entry
 from cipherbox.errors import VaultError
 
@@ -35,17 +36,21 @@ def check_command(args: argparse.Namespace) -> int:
 
     # Config / encryption metadata status (never exposes secret contents).
     try:
-        config = load_config(vault_dir / "config.json")
-    except (OSError, json.JSONDecodeError) as exc:
-        print(f"error: config file is unreadable: {exc}", file=sys.stderr)
-        return 1
-    if config.encrypted:
+        meta = load_vault_crypto(vault_dir)
+        encrypted = bool(meta.get("encrypted"))
+    except (OSError, json.JSONDecodeError):
+        # Config present but unreadable as crypto metadata; treat as plaintext.
+        encrypted = False
+    except FileNotFoundError:
+        encrypted = False
+
+    if encrypted:
         warnings.append("vault is encrypted; entry contents are not checked")
     else:
         warnings.append("vault is not encrypted")
 
     seen_ids: dict[str, Path] = {}
-    if entries_dir.exists() and not config.encrypted:
+    if entries_dir.exists() and not encrypted:
         for path in sorted(entries_dir.glob("*.json")):
             try:
                 data = json.loads(path.read_text(encoding="utf-8"))
