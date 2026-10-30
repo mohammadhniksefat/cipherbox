@@ -6,16 +6,25 @@ runnable as `python -m cipherbox`).
 
 ## Install
 
+Install from PyPI (recommended) or from source:
+
 ```bash
-git clone <repo>
-cd cipherbox-py
-python -m pip install -e .
+pip install cipherbox
 ```
 
 This provides the `vault` command:
 
 ```bash
 vault --help
+```
+
+For development (editable install) or full release-build details, see
+[`docs/release.md`](../release.md):
+
+```bash
+git clone <repo>
+cd cipherbox-py
+python -m pip install -e .
 ```
 
 Or run the CLI directly:
