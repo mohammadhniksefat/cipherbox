@@ -24,8 +24,16 @@ backward compatibility but new vaults are encrypted.
 
 ## Threat-model limitations
 
+cipherbox is designed to protect secrets at rest on a host you trust and
+control. It is **not** a defense against a compromised host.
+
 - Anyone with read access to the vault directory can attempt to decrypt entry
   files; the master password is the sole gate.
+- Malware running under your user account can read the vault directory,
+  capture the master password at the hidden `getpass` prompt, read terminal
+  scrollback and shell history, access the clipboard, and read decrypted
+  secrets in memory while a cipherbox command runs. Encryption at rest does
+  not protect against malware on the same host — protect the host itself.
 - Terminal history, shell pipelines, and logs may capture explicitly retrieved
   secret values (e.g. `vault show --reveal`, `vault get`, `vault copy`).
 - Clipboard contents (`vault copy`) may be accessible to other applications;
@@ -34,6 +42,10 @@ backward compatibility but new vaults are encrypted.
   protect them like secrets and never commit them to version control.
 - Deleting an export does not guarantee secure erasure from storage media or
   backups.
+
+In short: treat the machine running cipherbox as part of your trust boundary,
+and treat any explicitly retrieved value (on screen or in the clipboard) as a
+secret once it leaves the vault.
 
 ## Best practices
 

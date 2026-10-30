@@ -328,6 +328,20 @@ vault copy --path ./my-vault <entry-id> --field token
 | `--path` | Vault directory path |
 | `--field` | Field whose value to copy (required) |
 
+## `vault completion`
+
+Generate shell completion scripts for `bash`, `zsh`, or `powershell`.
+
+```bash
+vault completion bash   > ~/.local/share/bash-completion/completions/vault
+vault completion zsh    > ~/.zsh/completions/_vault
+vault completion powershell
+```
+
+| Argument | Description |
+|----------|-------------|
+| `shell` | Shell to generate completion for: `bash`, `zsh`, or `powershell` |
+
 ## Exit codes
 
 | Code | Meaning |

@@ -104,11 +104,40 @@ vault backup list --path ./my-vault --backup-dir ./my-backups
 vault restore <backup-id> --path ./my-vault --backup-dir ./my-backups --dry-run
 ```
 
+## Vault lifecycle
+
+- **Initialize** — `vault init --path ./my-vault --confirm` creates the vault
+  directory, `config.json`, and `entries/`. Encryption metadata
+  (`encrypted=true`, Argon2id KDF params, random salt) is written when the
+  vault is encrypted.
+- **Encrypt at rest** — new vaults are encrypted by default; access the
+  master password through a hidden `getpass` prompt (never a CLI argument).
+- **Change the master password** — `vault password change --path ./my-vault
+  --confirm` re-encrypts every entry with a new key derived from the new
+  password; the old password no longer unlocks the vault.
+- **Back up** — `vault backup create` snapshots `config.json` plus every
+  entry file into a timestamped directory outside the active vault.
+- **Restore** — `vault restore <backup-id>` validates the backup before
+  restoring and never overwrites an existing entry file; use `--dry-run` to
+  preview.
+- **Migrate** — export selected entries (`vault export` / `vault env export`),
+  initialize a new vault, and import (`vault import`) into it.
+
 If `--path` is omitted, the default vault location is used.
 
 ## Phase status
 
-**Phase 6 (developer productivity features) complete.** Entry files are stored as authenticated AES-GCM envelopes derived from a master password via Argon2id. Writes are atomic; duplicate entry IDs across files are detected as sync conflicts; backups and restore are available via `vault backup` / `vault restore`. Import/export and environment export are available via `vault export` / `vault import` / `vault env export`. Plaintext Phase 1 vaults remain readable for backward compatibility.
+**Phase 7 (release hardening and documentation) complete.** Stable MVP release:
+installable via PyPI or source, reproducible release builds (`docs/release.md`),
+shell completion (`vault completion bash|zsh|powershell`), documented supported
+operating systems and filesystems (`docs/user/os-filesystems.md`), integration
+tests covering complete workflows, dependency auditing and linting in CI,
+recovery tests for corrupted files and failed imports, conflict and external
+modification tests, and expanded threat-model documentation
+(`docs/user/security.md`). A user can install, initialize a vault, create
+encrypted entries, search and retrieve secrets, synchronize by their chosen
+means, export selected entries, and restore from backup using only the
+documentation.
 
 ## Secret types
 

@@ -3,15 +3,21 @@
 Local-first CLI secrets manager. Stores one JSON file per secret in a local
 vault directory.
 
-**Status:** Phase 4 (safe writes, recovery, and external modification handling) complete.
-Entry files are stored as authenticated AES-GCM envelopes derived from a master
-password via Argon2id. Writes are atomic (temp file + fsync + replace in the
-same directory). Duplicate entry IDs across files are detected as sync
+**Status:** Phase 7 (release hardening and documentation) complete — stable MVP
+release. Entry files are stored as authenticated AES-GCM envelopes derived from
+a master password via Argon2id. Writes are atomic (temp file + fsync + replace
+in the same directory). Duplicate entry IDs across files are detected as sync
 conflicts and never silently resolved. Backups and restore are available via
 `vault backup` / `vault restore`. Plaintext Phase 1 vaults remain readable for
 backward compatibility.
 
 ## Install
+
+```bash
+pip install cipherbox
+```
+
+or from source:
 
 ```bash
 git clone <repo>
@@ -283,7 +289,19 @@ The project is developed in phases (see `docs/project-spec.md`):
 4. Encryption at rest — **complete**
 5. Import, export, and portability — **complete**
 6. Developer productivity features — **complete**
-7. Release hardening
+7. Release hardening — **complete**
+
+## Shell completion
+
+Generate completion for your shell:
+
+```bash
+vault completion bash   # source into your bash completion dir
+vault completion zsh    # source into your zsh completions
+vault completion powershell
+```
+
+See `docs/release.md` for install and source instructions.
 
 ## License
 
