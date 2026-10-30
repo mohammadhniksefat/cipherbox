@@ -13,6 +13,7 @@ from cipherbox.cli.backup import (
     backup_list_command,
     backup_restore_command,
 )
+from cipherbox.cli.check import check_command, doctor_command
 from cipherbox.cli.delete import delete_command
 from cipherbox.cli.edit import edit_command
 from cipherbox.cli.env import env_export_command, env_list_command
@@ -205,6 +206,15 @@ def build_parser() -> argparse.ArgumentParser:
         help="Comma-separated charset pool: lower,upper,digits,punctuation.",
     )
 
+    p_check = subparsers.add_parser("check", help="Validate the vault schema and entries.")
+    p_check.add_argument("--path", default=None, help="Vault directory path.")
+    p_check.add_argument(
+        "--all", action="store_true", help="Run all available checks."
+    )
+
+    p_doctor = subparsers.add_parser("doctor", help="Diagnose vault configuration and permissions.")
+    p_doctor.add_argument("--path", default=None, help="Vault directory path.")
+
     _build_backup_parser(subparsers)
 
     from cipherbox.cli.export import _build_parser as _build_export_parser
@@ -291,9 +301,12 @@ def main(argv: list[str] | None = None) -> int:
             return get_command(args, repo=_repo(args))
         if args.command == "password":
             return password_change_command(args, repo=_repo(args))
-        if args.command == "generate":
-            if args.generate_command == "password":
-                return generate_password_command(args)
+        if args.command == "generate" and args.generate_command == "password":
+            return generate_password_command(args)
+        if args.command == "check":
+            return check_command(args)
+        if args.command == "doctor":
+            return doctor_command(args)
         if args.command == "backup":
             if args.backup_command == "create":
                 return backup_create_command(args)
