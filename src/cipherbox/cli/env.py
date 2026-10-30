@@ -56,6 +56,12 @@ def _build_parser(subparsers) -> None:
         help="Confirm overwrite of an existing output file.",
     )
 
+    p_list = env_sub.add_parser(
+        "list", help="List project-tagged entries with values redacted."
+    )
+    p_list.add_argument("project", help="Project tag to select entries for.")
+    p_list.add_argument("--path", default=None, help="Vault directory path.")
+
 
 def env_export_command(
     args: argparse.Namespace, repo: VaultRepository | None = None
@@ -96,4 +102,31 @@ def env_export_command(
     output.write_text("\n".join(lines) + ("\n" if lines else ""), encoding="utf-8")
 
     print(f"Exported {len(entries)} entries tagged {project!r} to {output}")
+    return 0
+
+
+def env_list_command(
+    args: argparse.Namespace, repo: VaultRepository | None = None
+) -> int:
+    """List entries tagged with <project>, with field values redacted."""
+    if repo is None:
+        from cipherbox.config.paths import default_vault_dir
+
+        vault_path = Path(getattr(args, "path", None) or default_vault_dir())
+        repo = VaultRepository(vault_path)
+
+    project = args.project
+    entries = [e for e in repo.list() if project in e.tags]
+
+    if not entries:
+        print("(no entries)")
+        return 0
+
+    for entry in entries:
+        print(f"{entry.id}\t{entry.type}\t{entry.title}")
+        if entry.fields:
+            for key in sorted(entry.fields):
+                print(f"\t{key}: <redacted>")
+        else:
+            print("\tfields: (none)")
     return 0
