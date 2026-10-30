@@ -14,6 +14,7 @@ from cipherbox.cli.backup import (
     backup_restore_command,
 )
 from cipherbox.cli.check import check_command, doctor_command
+from cipherbox.cli.completion import completion_command
 from cipherbox.cli.copy import copy_command
 from cipherbox.cli.delete import delete_command
 from cipherbox.cli.edit import edit_command
@@ -229,6 +230,15 @@ def build_parser() -> argparse.ArgumentParser:
         "--field", required=True, help="Field whose value to copy to the clipboard."
     )
 
+    p_completion = subparsers.add_parser(
+        "completion", help="Generate shell completion scripts."
+    )
+    p_completion.add_argument(
+        "shell",
+        choices=["bash", "zsh", "powershell"],
+        help="Shell to generate completion for.",
+    )
+
     _build_backup_parser(subparsers)
 
     from cipherbox.cli.export import _build_parser as _build_export_parser
@@ -323,6 +333,8 @@ def main(argv: list[str] | None = None) -> int:
             return doctor_command(args)
         if args.command == "copy":
             return copy_command(args, repo=_repo(args))
+        if args.command == "completion":
+            return completion_command(args)
         if args.command == "backup":
             if args.backup_command == "create":
                 return backup_create_command(args)
