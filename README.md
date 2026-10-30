@@ -55,6 +55,24 @@ vault list --path ./my-vault --type api-key --tag development --output json
 vault search --path ./my-vault "github"
 vault search --path ./my-vault "staging" --in fields --output json
 
+# Retrieve a single secret field value to stdout (explicit retrieval only)
+vault get --path ./my-vault <entry-id> --field password
+
+# List project-tagged env entries (values redacted)
+vault env list --path ./my-vault my-project
+
+# Generate a secure password with a CSPRNG (never auto-stored)
+vault generate password --path ./my-vault --length 32
+
+# Validate the vault: schema, duplicate IDs, malformed files
+vault check --path ./my-vault --all
+
+# Diagnose vault configuration and filesystem permissions
+vault doctor --path ./my-vault
+
+# Copy a secret field value to the clipboard (explicit field required)
+vault copy --path ./my-vault <entry-id> --field token
+
 # Export all entries to a portable JSON document (plaintext: warns on stderr)
 vault export --path ./my-vault --output export.json
 
@@ -189,8 +207,9 @@ the vault and the new password does, with all entry contents intact.
 - Wrong password or a locked vault fails closed — no partial plaintext, no
   silent fallback.
 - Never store real credentials in a vault you have not verified is encrypted.
-
-## Listing and search
+- Explicitly retrieved values (`vault get`, `vault copy`) can still leak through
+  terminal history, shell logs, pipelines, and clipboard managers; treat them
+  like secrets once on screen or in the clipboard.
 
 ## Listing and search
 
@@ -219,6 +238,28 @@ vault search --path ./my-vault "github"
 vault search --path ./my-vault "staging" --in fields --output json
 ```
 
+## Developer productivity
+
+```bash
+# Retrieve a single secret field value to stdout (explicit retrieval only)
+vault get --path ./my-vault <entry-id> --field password
+
+# List project-tagged env entries (values redacted)
+vault env list --path ./my-vault my-project
+
+# Generate a secure password with a CSPRNG (never auto-stored)
+vault generate password --path ./my-vault --length 32
+
+# Validate the vault: schema, duplicate IDs, malformed files
+vault check --path ./my-vault --all
+
+# Diagnose vault configuration and filesystem permissions
+vault doctor --path ./my-vault
+
+# Copy a secret field value to the clipboard (explicit field required)
+vault copy --path ./my-vault <entry-id> --field token
+```
+
 ## Development
 
 ```bash
@@ -240,8 +281,8 @@ The project is developed in phases (see `docs/project-spec.md`):
 2. Storage and CRUD (plaintext prototype) — **complete**
 3. Search and filtering — **complete**
 4. Encryption at rest — **complete**
-5. Safe writes and synchronization compatibility — **complete**
-6. Import, export, and portability — **complete**
+5. Import, export, and portability — **complete**
+6. Developer productivity features — **complete**
 7. Release hardening
 
 ## License
