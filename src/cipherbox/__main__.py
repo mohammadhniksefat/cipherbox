@@ -15,6 +15,7 @@ from cipherbox.cli.backup import (
 )
 from cipherbox.cli.delete import delete_command
 from cipherbox.cli.edit import edit_command
+from cipherbox.cli.env import env_export_command
 from cipherbox.cli.export import export_command
 from cipherbox.cli.import_ import import_command
 from cipherbox.cli.init import init_command
@@ -180,6 +181,10 @@ def build_parser() -> argparse.ArgumentParser:
     _build_export_parser(subparsers)
     _build_import_parser(subparsers)
 
+    from cipherbox.cli.env import _build_parser as _build_env_parser
+
+    _build_env_parser(subparsers)
+
     return parser
 
 
@@ -263,6 +268,8 @@ def main(argv: list[str] | None = None) -> int:
             return export_command(args)
         if args.command == "import":
             return import_command(args)
+        if args.command == "env" and args.env_command == "export":
+            return env_export_command(args)
     except VaultError as exc:
         print(f"error: {exc}", file=sys.stderr)
         return exc.exit_code
