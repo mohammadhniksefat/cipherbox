@@ -264,6 +264,8 @@ def build_parser() -> argparse.ArgumentParser:
         "key", nargs="?", help="Config key (e.g. default-vault)."
     )
 
+    p_config_sub.add_parser("list", help="List all configured keys and values.")
+
     _build_backup_parser(subparsers)
 
     from cipherbox.cli.export import _build_parser as _build_export_parser

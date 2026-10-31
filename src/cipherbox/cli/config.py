@@ -33,6 +33,8 @@ def _build_parser(subparsers) -> None:
     )
     p_unset.add_argument("key", nargs="?", help="Config key (e.g. default-vault).")
 
+    p_config_sub.add_parser("list", help="List all configured keys and values.")
+
 
 def config_command(args: argparse.Namespace) -> int:
     """Run the ``vault config`` subcommand.
@@ -76,6 +78,14 @@ def config_command(args: argparse.Namespace) -> int:
             return 2
         app_config.unset(key)
         print(f"unset {key}")
+        return 0
+
+    if command == "list":
+        data = dict(app_config._data)
+        if not data:
+            return 0
+        for key, value in sorted(data.items()):
+            print(f"{key} = {value}")
         return 0
 
     print(f"error: unknown config subcommand '{command}'", file=sys.stderr)

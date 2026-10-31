@@ -113,6 +113,7 @@ config (stored outside any vault):
 ```bash
 vault config set default-vault ./my-vault
 vault list          # operates on ./my-vault without --path
+vault config list   # show all configured keys
 vault config unset default-vault   # restores platform default
 ```
 

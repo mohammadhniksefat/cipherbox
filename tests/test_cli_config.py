@@ -80,3 +80,26 @@ def test_config_no_subcommand_errors(tmp_path, monkeypatch, capsys):
 
     code = main(["config"])
     assert code != 0
+
+
+def test_config_list_prints_all_keys(tmp_path, monkeypatch, capsys):
+    _set_config(
+        tmp_path,
+        monkeypatch,
+        {"default-vault": str(tmp_path / "vault"), "theme": "dark"},
+    )
+
+    code = main(["config", "list"])
+    assert code == 0
+    out = capsys.readouterr().out
+    assert "default-vault" in out
+    assert str(tmp_path / "vault") in out
+    assert "theme" in out
+    assert "dark" in out
+
+
+def test_config_list_empty_is_ok(tmp_path, monkeypatch, capsys):
+    _set_config(tmp_path, monkeypatch, {})
+
+    code = main(["config", "list"])
+    assert code == 0

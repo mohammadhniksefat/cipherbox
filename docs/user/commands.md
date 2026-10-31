@@ -364,6 +364,7 @@ vault config unset default-vault
 | `show <key>` | `key` (e.g. `default-vault`) | Prints the configured value, exit 0. Missing key: error to stderr, exit 3. |
 | `set <key> <value>` | `key`, `value` (e.g. `default-vault ./my-vault`) | Stores `key = value` in app config, exit 0. Missing value: error, exit 2. |
 | `unset <key>` | `key` (e.g. `default-vault`) | Removes the key, exit 0. Missing key is not an error. |
+| `list` | none | Prints all configured keys as `key = value`, one per line, exit 0. |
 
 App config location:
 
