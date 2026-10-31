@@ -39,7 +39,8 @@ python -m cipherbox --help
 vault init --path ./my-vault --confirm
 ```
 
-- `--path` sets the vault directory. If omitted, the default location is used:
+- `--path` sets the vault directory. If omitted, the default location is used
+  (or the `default-vault` configured with `vault config set default-vault`):
   - Windows: `%LOCALAPPDATA%/cipherbox-vault`
   - macOS/Linux: `$XDG_DATA_HOME/cipherbox-vault` or `~/.local/share/cipherbox-vault`
 - `--confirm` is required to overwrite an existing vault.
@@ -103,6 +104,19 @@ vault backup create --path ./my-vault --backup-dir ./my-backups
 vault backup list --path ./my-vault --backup-dir ./my-backups
 vault restore <backup-id> --path ./my-vault --backup-dir ./my-backups --dry-run
 ```
+
+## Set a default vault (optional)
+
+To avoid passing `--path` on every command, set a default vault in app-level
+config (stored outside any vault):
+
+```bash
+vault config set default-vault ./my-vault
+vault list          # operates on ./my-vault without --path
+vault config unset default-vault   # restores platform default
+```
+
+`--path` always overrides the configured default.
 
 ## Vault lifecycle
 

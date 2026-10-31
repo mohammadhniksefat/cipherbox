@@ -31,7 +31,7 @@ export selected entries, and restore from backup using only the documentation.
 `vault init`, `vault add`, `vault show`, `vault edit`, `vault delete`,
 `vault list`, `vault search`, `vault get`, `vault env export`,
 `vault env list`, `vault generate password`, `vault check`, `vault doctor`,
-`vault copy`, `vault completion`, `vault backup`, `vault restore`,
-`vault password change`, `vault export`, `vault import`
+`vault copy`, `vault completion`, `vault config`, `vault backup`,
+`vault restore`, `vault password change`, `vault export`, `vault import`
 
 Run `vault --help` or `python -m cipherbox --help` for inline help.

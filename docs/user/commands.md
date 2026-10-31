@@ -342,6 +342,38 @@ vault completion powershell
 |----------|-------------|
 | `shell` | Shell to generate completion for: `bash`, `zsh`, or `powershell` |
 
+## `vault config`
+
+Manage app-level configuration, stored separately from any vault (e.g. the
+default vault path used when `--path` is omitted). Follows a git-like
+`show|set|unset` interface.
+
+```bash
+# Show the configured default vault
+vault config show default-vault
+
+# Set the default vault (used when --path is omitted)
+vault config set default-vault ./my-vault
+
+# Remove the default vault (restores platform default behavior)
+vault config unset default-vault
+```
+
+| Subcommand | Arguments | Behavior |
+|------------|-----------|----------|
+| `show <key>` | `key` (e.g. `default-vault`) | Prints the configured value, exit 0. Missing key: error to stderr, exit 3. |
+| `set <key> <value>` | `key`, `value` (e.g. `default-vault ./my-vault`) | Stores `key = value` in app config, exit 0. Missing value: error, exit 2. |
+| `unset <key>` | `key` (e.g. `default-vault`) | Removes the key, exit 0. Missing key is not an error. |
+
+App config location:
+
+- Windows: `%LOCALAPPDATA%/cipherbox/app-config.json`
+- macOS/Linux: `$XDG_CONFIG_HOME/cipherbox/app-config.json` or `~/.config/cipherbox/app-config.json`
+
+This is separate from per-vault `config.json` (inside each vault directory,
+which holds encryption metadata). `--path` always overrides the configured
+default vault.
+
 ## Exit codes
 
 | Code | Meaning |
@@ -359,3 +391,6 @@ If `--path` is omitted, the default vault location is used:
 
 - Windows: `%LOCALAPPDATA%/cipherbox-vault`
 - macOS/Linux: `$XDG_DATA_HOME/cipherbox-vault` or `~/.local/share/cipherbox-vault`
+
+You can override this default with `vault config set default-vault <path>` (stored
+in app-level config outside any vault). `--path` always takes precedence.

@@ -79,6 +79,9 @@ vault doctor --path ./my-vault
 # Copy a secret field value to the clipboard (explicit field required)
 vault copy --path ./my-vault <entry-id> --field token
 
+# Copy a secret field value to the clipboard (explicit field required)
+vault copy --path ./my-vault <entry-id> --field token
+
 # Export all entries to a portable JSON document (plaintext: warns on stderr)
 vault export --path ./my-vault --output export.json
 
@@ -90,9 +93,24 @@ vault import export.json --path ./my-vault --policy replace
 vault env export my-project --path ./my-vault --output .env --confirm
 ```
 
-If `--path` is omitted, the default vault location is used
-(`%LOCALAPPDATA%/cipherbox-vault` on Windows,
+# Default vault (optional)
+
+To avoid passing `--path` on every command, set a default vault in app-level
+config (stored outside any vault):
+
+```bash
+vault config set default-vault ./my-vault
+vault list          # operates on ./my-vault without --path
+vault config unset default-vault   # restores platform default
+```
+
+If `--path` is omitted and no default vault is configured, the platform default
+location is used (`%LOCALAPPDATA%/cipherbox-vault` on Windows,
 `$XDG_DATA_HOME/cipherbox-vault` or `~/.local/share/cipherbox-vault` elsewhere).
+`--path` always overrides both. App config lives at
+`%LOCALAPPDATA%/cipherbox/app-config.json` (Windows) or
+`$XDG_CONFIG_HOME/cipherbox/app-config.json` (`~/.config/cipherbox/app-config.json`
+elsewhere), separate from per-vault `config.json`.
 
 ## Secret types
 
