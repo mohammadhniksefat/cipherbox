@@ -328,6 +328,80 @@ vault copy --path ./my-vault <entry-id> --field token
 | `--path` | Vault directory path |
 | `--field` | Field whose value to copy (required) |
 
+## `vault keyring store|clear|show`
+
+Manage the vault's derived unlock key in the OS keyring. Only the *derived* AES-256 key is stored — never the master password. Nothing is stored until you explicitly run `vault keyring store`.
+
+### `vault keyring store`
+
+Prompt for the master password (hidden), unlock the vault to derive the key, and store the derived key in the OS keyring keyed by vault path.
+
+```bash
+vault keyring store --path ./my-vault
+```
+
+| Argument | Description |
+|----------|-------------|
+| `--path` | Vault directory path (default: app config `default-vault`, then platform default vault dir) |
+
+Output:
+
+```
+Stored unlock key for vault at ./my-vault
+```
+
+### `vault keyring clear`
+
+Remove the unlock key entry for this vault from the OS keyring. Exit 0 regardless of whether an entry existed.
+
+```bash
+vault keyring clear --path ./my-vault
+```
+
+| Argument | Description |
+|----------|-------------|
+| `--path` | Vault directory path (default: app config `default-vault`, then platform default vault dir) |
+
+Output:
+
+```
+Cleared unlock key for vault at ./my-vault
+```
+
+### `vault keyring show`
+
+Report whether an unlock key is stored for this vault (yes/no, no secret value exposed).
+
+```bash
+vault keyring show --path ./my-vault
+```
+
+| Argument | Description |
+|----------|-------------|
+| `--path` | Vault directory path (default: app config `default-vault`, then platform default vault dir) |
+
+Output:
+
+```
+Unlock key stored for vault at ./my-vault
+```
+
+or
+
+```
+No unlock key stored for vault at ./my-vault
+```
+
+## `vault password change`
+
+Change the vault master password and re-encrypt every entry with a new key. If a keyring entry exists for the vault, it is removed and you are prompted to store the new derived key:
+
+```
+Store new unlock key in keyring? (y/N):
+```
+
+Answer `y` to cache the new key in the OS keyring so subsequent commands unlock without prompting; `n` leaves the vault unlocked only via `getpass` prompt (or `VAULT_PASSWORD` env var).
+
 ## `vault completion`
 
 Generate shell completion scripts for `bash`, `zsh`, or `powershell`.

@@ -12,6 +12,7 @@ readme = "README.md"
 dependencies = [
     "argon2-cffi>=23.1.0",
     "cryptography>=42.0.0",
+    "keyring>=25.0",
 ]
 
 [project.scripts]

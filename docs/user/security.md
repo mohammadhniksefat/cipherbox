@@ -20,7 +20,29 @@ backward compatibility but new vaults are encrypted.
 - Key material is held only in memory for the duration of the command and is
   zeroized (best-effort) before exit.
 - `vault password change` re-encrypts every entry with a new key and invalidates
-  the old password.
+  the old password. If a derived key was cached in the OS keyring, the stale
+  entry is removed and you are prompted to store the new derived key.
+
+### Keyring persistence (optional)
+
+`vault keyring store` persists the derived AES-256 unlock key in the OS
+credential store, keyed by vault path, so subsequent commands unlock without a
+`getpass` prompt. The master password itself is **never** stored — only the
+derived key. Nothing is cached until you explicitly run `vault keyring store`.
+
+Trade-offs to consider:
+
+- The OS keyring is protected by your user account's login credentials; anyone
+  who can unlock your session can retrieve the cached derived key and decrypt
+  the vault without the master password.
+- `vault keyring clear` removes the cached key; `vault password change`
+  automatically removes the stale entry and prompts to re-store the new one.
+- Headless/CI environments without a keyring daemon fall back to the
+  `VAULT_PASSWORD` environment variable or a hidden `getpass` prompt.
+
+If you do not want any key material persisted outside process memory, simply
+never run `vault keyring store`; the default behavior (prompt every command)
+is unchanged.
 
 ## Threat-model limitations
 

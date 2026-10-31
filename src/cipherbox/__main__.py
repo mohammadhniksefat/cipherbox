@@ -24,10 +24,12 @@ from cipherbox.cli.generate import generate_password_command
 from cipherbox.cli.get import get_command
 from cipherbox.cli.import_ import import_command
 from cipherbox.cli.init import init_command
+from cipherbox.cli.keyring import keyring_command
 from cipherbox.cli.list import list_command
 from cipherbox.cli.password import password_change_command
 from cipherbox.cli.search import search_command
 from cipherbox.cli.show import show_command
+from cipherbox.cli.unlock import unlock_repo
 from cipherbox.config.paths import resolve_vault_dir
 from cipherbox.errors import EXIT_OK, VaultError
 from cipherbox.storage.repository import VaultRepository
@@ -266,6 +268,32 @@ def build_parser() -> argparse.ArgumentParser:
 
     p_config_sub.add_parser("list", help="List all configured keys and values.")
 
+    p_keyring = subparsers.add_parser(
+        "keyring", help="Manage vault unlock key in OS keyring."
+    )
+    p_keyring_sub = p_keyring.add_subparsers(dest="keyring_command")
+
+    p_keyring_store = p_keyring_sub.add_parser(
+        "store", help="Store the vault's derived unlock key in the keyring."
+    )
+    p_keyring_store.add_argument(
+        "--path", default=None, help="Vault directory path (default: default vault)."
+    )
+
+    p_keyring_clear = p_keyring_sub.add_parser(
+        "clear", help="Remove the vault's unlock key from the keyring."
+    )
+    p_keyring_clear.add_argument(
+        "--path", default=None, help="Vault directory path (default: default vault)."
+    )
+
+    p_keyring_show = p_keyring_sub.add_parser(
+        "show", help="Report whether an unlock key is stored for the vault."
+    )
+    p_keyring_show.add_argument(
+        "--path", default=None, help="Vault directory path (default: default vault)."
+    )
+
     _build_backup_parser(subparsers)
 
     from cipherbox.cli.export import _build_parser as _build_export_parser
@@ -282,48 +310,19 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def _repo(args) -> VaultRepository:
-    """Open the vault, unlocking it with a hidden password prompt when encrypted.
+    """Open the vault, resolving its decryption key when encrypted.
 
-    ``init`` is excluded from prompting (it creates the vault). For an
-    encrypted vault the master password is read through ``getpass`` (never
-    a CLI argument), the key is derived with Argon2id, and an unlocked
-    repository is returned. A wrong password raises ``DecryptionError``.
+    ``init`` is excluded (it creates the vault). ``password change`` manages
+    its own unlock flow, so it must not be auto-unlocked here. For all other
+    commands on an encrypted vault, the key is resolved via ``unlock_repo``:
+    OS keyring -> ``VAULT_PASSWORD`` env var -> hidden ``getpass`` prompt.
     """
-    import base64
-
-    from cipherbox.crypto.kdf import kdf_params_from_dict
-    from cipherbox.crypto.vault import (
-        VaultKeyManager,
-        load_vault_crypto,
-        prompt_password,
-    )
-
     vault_path = resolve_vault_dir(getattr(args, "path", None))
 
-    # ``init`` creates the vault (no prompt). ``password change`` manages
-    # its own unlock flow (old password, then new password + confirmation),
-    # so it must not be auto-unlocked here.
     if args.command in ("init", "password"):
         return VaultRepository(vault_path)
 
-    try:
-        meta = load_vault_crypto(vault_path)
-    except FileNotFoundError:
-        # Vault not initialized yet; plaintext repository.
-        return VaultRepository(vault_path)
-
-    if not meta.get("encrypted"):
-        return VaultRepository(vault_path)
-
-    password = prompt_password()
-    salt = base64.b64decode(meta["salt"])
-    params = kdf_params_from_dict(meta["kdf_params"])
-    mgr = VaultKeyManager()
-    try:
-        key = mgr.unlock(password, salt, params)
-    except Exception as exc:
-        raise VaultError(f"failed to unlock vault: {exc}") from exc
-    return VaultRepository(vault_path, key=key)
+    return unlock_repo(vault_path)
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -364,6 +363,8 @@ def main(argv: list[str] | None = None) -> int:
             return completion_command(args)
         if args.command == "config":
             return config_command(args)
+        if args.command == "keyring":
+            return keyring_command(args)
         if args.command == "backup":
             if args.backup_command == "create":
                 return backup_create_command(args)

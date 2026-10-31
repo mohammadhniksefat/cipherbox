@@ -99,7 +99,8 @@ def test_e2e_password_change_flow(tmp_path, monkeypatch, capsys):
     assert len(data) == 2
 
     # Change password master -> rotate.
-    inputs = iter(["master", "rotate", "rotate"])
+    # The 4th input answers the keyring re-store prompt ("n" here).
+    inputs = iter(["master", "rotate", "rotate", "n"])
     monkeypatch.setattr("getpass.getpass", lambda prompt="": next(inputs))
     code = main(["password", "change", "--path", str(vault_dir), "--confirm"])
     assert code == 0

@@ -60,7 +60,9 @@ def test_password_change_invalidates_old(tmp_path, monkeypatch, capsys):
     assert data[0]["fields"]["username"] == "<redacted>"
 
     # Change password oldpass -> newpass (confirmation supplied).
-    inputs = iter(["oldpass", "newpass", "newpass"])
+    # The 4th input answers the keyring re-store prompt ("n" here; this test
+    # does not exercise keyring behavior).
+    inputs = iter(["oldpass", "newpass", "newpass", "n"])
     monkeypatch.setattr("getpass.getpass", lambda prompt="": next(inputs))
     code = main(["password", "change", "--path", str(vault_dir), "--confirm"])
     assert code == 0
@@ -90,3 +92,56 @@ def test_password_change_wrong_old_password_fails(tmp_path, monkeypatch, capsys)
     monkeypatch.setattr("getpass.getpass", lambda prompt="": "not-the-old")
     code = main(["password", "change", "--path", str(vault_dir), "--confirm"])
     assert code != 0
+
+
+def test_password_change_clears_keyring_and_prompts_restore(
+    tmp_path, monkeypatch, capsys
+):
+    """On password change, stale keyring entry is removed and user is
+    prompted to re-store the new derived key."""
+    vault_dir = _seed_encrypted_vault(tmp_path, monkeypatch, capsys=capsys)
+
+    class FakeKeyring:
+        def __init__(self):
+            self._data = {}
+
+        def get_password(self, service, username):
+            return self._data.get(username)
+
+        def set_password(self, service, username, password):
+            self._data[username] = password
+
+        def delete_password(self, service, username):
+            self._data.pop(username, None)
+
+    fake = FakeKeyring()
+    monkeypatch.setattr("cipherbox.crypto.keyring._keyring_mod", fake)
+
+    # Store the old derived key in keyring first.
+    from cipherbox.crypto.kdf import default_kdf_params, derive_key
+
+    old_key = derive_key("oldpass", b"\x01" * 16, default_kdf_params())
+    fake._data[str(vault_dir.resolve())] = old_key.decode("latin-1")
+
+    # Change password oldpass -> newpass; answer "y" to re-store prompt.
+    inputs = iter(["oldpass", "newpass", "newpass", "y"])
+    monkeypatch.setattr("getpass.getpass", lambda prompt="": next(inputs))
+
+    code = main(["password", "change", "--path", str(vault_dir), "--confirm"])
+    assert code == 0
+    capsys.readouterr()
+
+    # Old keyring entry value is gone: erase removed the old derived key,
+    # then store replaced it with the new one (user said "y").
+    assert fake._data[str(vault_dir.resolve())] != old_key.decode("latin-1")
+
+    # New derived key was stored (user said "y").
+    assert str(vault_dir.resolve()) in fake._data
+
+    # New password unlocks.
+    monkeypatch.setattr("getpass.getpass", lambda prompt="": "newpass")
+    code = main(["list", "--path", str(vault_dir), "--output", "json", "--reveal"])
+    assert code == 0
+    data = json.loads(capsys.readouterr().out)
+    assert len(data) == 1
+    assert data[0]["id"] == "id-a"

@@ -13,6 +13,7 @@ from cipherbox.crypto.kdf import (
     kdf_params_from_dict,
     kdf_params_to_dict,
 )
+from cipherbox.crypto.keyring import KeyringStore
 from cipherbox.crypto.vault import (
     VaultKeyManager,
     load_vault_crypto,
@@ -103,6 +104,18 @@ def password_change_command(
 
     # Zeroize old key material.
     mgr.lock()
+
+    # Invalidate the stale keyring entry (old derived key can no longer
+    # unlock anything) and offer to store the new derived key.
+    store = KeyringStore()
+    store.erase(vault_dir)
+
+    restore = prompt_password("Store new unlock key in keyring? (y/N): ")
+    if restore.strip().lower() == "y":
+        store.store(vault_dir, new_key)
+        print(f"Stored unlock key for vault at {vault_dir}")
+    else:
+        print(f"Unlock key not stored for vault at {vault_dir}")
 
     count = len(entries)
     print(
