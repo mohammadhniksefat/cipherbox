@@ -38,6 +38,27 @@ def default_vault_dir() -> Path:
     return Path(base) / "cipherbox-vault"
 
 
+def resolve_vault_dir(path: str | Path | None = None) -> Path:
+    """Resolve the vault directory to operate on.
+
+    Resolution order:
+    1. ``path`` (the ``--path`` argument) always wins when given.
+    2. Otherwise, the app config ``default-vault`` key, if set.
+    3. Otherwise, fall back to ``default_vault_dir()``.
+    """
+    if path is not None:
+        return Path(path)
+
+    from cipherbox.config.app_config import load_app_config
+
+    app_config = load_app_config()
+    default_vault = app_config.get("default-vault")
+    if default_vault:
+        return Path(default_vault)
+
+    return default_vault_dir()
+
+
 def save_config(config: VaultConfig) -> None:
     """Persist a VaultConfig to its config_file as JSON."""
     config.config_file.parent.mkdir(parents=True, exist_ok=True)

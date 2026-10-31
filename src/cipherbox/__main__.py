@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import argparse
 import sys
-from pathlib import Path
 
 from cipherbox.cli.add import add_command
 from cipherbox.cli.backup import _build_parser as _build_backup_parser
@@ -15,6 +14,7 @@ from cipherbox.cli.backup import (
 )
 from cipherbox.cli.check import check_command, doctor_command
 from cipherbox.cli.completion import completion_command
+from cipherbox.cli.config import config_command
 from cipherbox.cli.copy import copy_command
 from cipherbox.cli.delete import delete_command
 from cipherbox.cli.edit import edit_command
@@ -28,7 +28,7 @@ from cipherbox.cli.list import list_command
 from cipherbox.cli.password import password_change_command
 from cipherbox.cli.search import search_command
 from cipherbox.cli.show import show_command
-from cipherbox.config.paths import default_vault_dir
+from cipherbox.config.paths import resolve_vault_dir
 from cipherbox.errors import EXIT_OK, VaultError
 from cipherbox.storage.repository import VaultRepository
 
@@ -239,6 +239,31 @@ def build_parser() -> argparse.ArgumentParser:
         help="Shell to generate completion for.",
     )
 
+    p_config = subparsers.add_parser(
+        "config", help="Manage app-level configuration (e.g. default vault)."
+    )
+    p_config_sub = p_config.add_subparsers(dest="config_command")
+
+    p_config_show = p_config_sub.add_parser(
+        "show", help="Print the configured value for a config key."
+    )
+    p_config_show.add_argument(
+        "key", nargs="?", help="Config key (e.g. default-vault)."
+    )
+
+    p_config_set = p_config_sub.add_parser(
+        "set", help="Store <key> = <value> in app config."
+    )
+    p_config_set.add_argument("key", help="Config key (e.g. default-vault).")
+    p_config_set.add_argument("value", nargs="?", help="Value to store.")
+
+    p_config_unset = p_config_sub.add_parser(
+        "unset", help="Remove a config key. Missing key is not an error."
+    )
+    p_config_unset.add_argument(
+        "key", nargs="?", help="Config key (e.g. default-vault)."
+    )
+
     _build_backup_parser(subparsers)
 
     from cipherbox.cli.export import _build_parser as _build_export_parser
@@ -271,7 +296,7 @@ def _repo(args) -> VaultRepository:
         prompt_password,
     )
 
-    vault_path = Path(getattr(args, "path", None) or default_vault_dir())
+    vault_path = resolve_vault_dir(getattr(args, "path", None))
 
     # ``init`` creates the vault (no prompt). ``password change`` manages
     # its own unlock flow (old password, then new password + confirmation),
@@ -335,6 +360,8 @@ def main(argv: list[str] | None = None) -> int:
             return copy_command(args, repo=_repo(args))
         if args.command == "completion":
             return completion_command(args)
+        if args.command == "config":
+            return config_command(args)
         if args.command == "backup":
             if args.backup_command == "create":
                 return backup_create_command(args)
