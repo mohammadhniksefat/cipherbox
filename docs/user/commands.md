@@ -444,6 +444,47 @@ Store new unlock key in keyring? (y/N):
 
 Answer `y` to cache the new key in the OS keyring so subsequent commands unlock without prompting; `n` leaves the vault unlocked only via `getpass` prompt (or `VAULT_PASSWORD` env var).
 
+## `vault encrypt`
+
+Encrypt an existing plaintext vault in place. Prompts for a master password
+(hidden), derives an AES-256 key via Argon2id with a fresh random salt,
+persists encryption metadata to the vault config, and re-writes every entry
+file as an AES-256-GCM encrypted envelope. Entry contents are preserved
+exactly; only their on-disk representation changes.
+
+```bash
+vault encrypt --path ./my-vault
+vault encrypt --path ./my-vault --confirm
+```
+
+| Argument | Description |
+|----------|-------------|
+| `--path` | Vault directory path |
+| `--confirm` | Skip the confirmation prompt |
+
+Refuses to run on an already-encrypted vault. Confirmation is required unless
+`--confirm` is passed.
+
+## `vault decrypt`
+
+Decrypt an existing encrypted vault in place. Prompts for the current master
+password (hidden), unlocks the vault, re-writes every entry file as plaintext
+JSON, and removes the encryption metadata from the vault config. Entry
+contents are preserved exactly.
+
+```bash
+vault decrypt --path ./my-vault
+vault decrypt --path ./my-vault --confirm
+```
+
+| Argument | Description |
+|----------|-------------|
+| `--path` | Vault directory path |
+| `--confirm` | Skip the confirmation prompt |
+
+Refuses to run on an already-plaintext vault or on a wrong password.
+Confirmation is required unless `--confirm` is passed.
+
 ## `vault completion`
 
 Generate shell completion scripts for `bash`, `zsh`, or `powershell`.

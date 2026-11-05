@@ -16,8 +16,10 @@ from cipherbox.cli.check import check_command, doctor_command
 from cipherbox.cli.completion import completion_command
 from cipherbox.cli.config import config_command
 from cipherbox.cli.copy import copy_command
+from cipherbox.cli.decrypt import decrypt_command
 from cipherbox.cli.delete import delete_command
 from cipherbox.cli.edit import edit_command
+from cipherbox.cli.encrypt import encrypt_command
 from cipherbox.cli.env import env_export_command, env_list_command
 from cipherbox.cli.export import export_command
 from cipherbox.cli.generate import generate_password_command
@@ -304,6 +306,22 @@ def build_parser() -> argparse.ArgumentParser:
         "--path", default=None, help="Vault directory path (default: default vault)."
     )
 
+    p_encrypt = subparsers.add_parser(
+        "encrypt", help="Encrypt an existing plaintext vault in place."
+    )
+    p_encrypt.add_argument("--path", default=None, help="Vault directory path.")
+    p_encrypt.add_argument(
+        "--confirm", action="store_true", help="Skip confirmation prompt."
+    )
+
+    p_decrypt = subparsers.add_parser(
+        "decrypt", help="Decrypt an existing encrypted vault in place."
+    )
+    p_decrypt.add_argument("--path", default=None, help="Vault directory path.")
+    p_decrypt.add_argument(
+        "--confirm", action="store_true", help="Skip confirmation prompt."
+    )
+
     _build_backup_parser(subparsers)
 
     from cipherbox.cli.export import _build_parser as _build_export_parser
@@ -329,7 +347,7 @@ def _repo(args) -> VaultRepository:
     """
     vault_path = resolve_vault_dir(getattr(args, "path", None))
 
-    if args.command in ("init", "password"):
+    if args.command in ("init", "password", "encrypt", "decrypt"):
         return VaultRepository(vault_path)
 
     return unlock_repo(vault_path)
@@ -373,6 +391,10 @@ def main(argv: list[str] | None = None) -> int:
             return completion_command(args)
         if args.command == "config":
             return config_command(args)
+        if args.command == "encrypt":
+            return encrypt_command(args)
+        if args.command == "decrypt":
+            return decrypt_command(args)
         if args.command == "keyring":
             return keyring_command(args)
         if args.command == "backup":
