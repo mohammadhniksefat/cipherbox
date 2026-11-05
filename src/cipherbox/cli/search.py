@@ -5,7 +5,7 @@ from __future__ import annotations
 import argparse
 import sys
 
-from cipherbox.services.output import format_json, format_table
+from cipherbox.services.output import format_json, format_list_long, format_list_minimal
 from cipherbox.services.query import EntryQuery, query_entries
 from cipherbox.storage.repository import VaultRepository
 
@@ -44,9 +44,12 @@ def search_command(
 
     reveal = bool(getattr(args, "reveal", False))
     output = getattr(args, "output", "table")
+    long_form = bool(getattr(args, "long", False))
 
     if output == "json":
         print(format_json(entries, reveal=reveal))
+    elif long_form:
+        print(format_list_long(entries, reveal=reveal))
     else:
-        print(format_table(entries, reveal=reveal))
+        print(format_list_minimal(entries))
     return 0

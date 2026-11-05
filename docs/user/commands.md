@@ -236,6 +236,12 @@ vault search --path ./my-vault "staging" --in fields --output json
 | `--offset` | Number of entries to skip |
 | `--output` | Output format: `table` (default) or `json` |
 | `--reveal` | Reveal secret field values |
+| `--long` | Show richer metadata: tags, timestamps, and per-field char length |
+
+Output matches `vault list`: a minimal table of id, type, and title by default;
+use `--long` to see tags, timestamps, and per-field char length. Secret field
+values are never shown by `vault search`; use `vault show --reveal <id>` to
+retrieve a secret.
 
 ## `vault export`
 
