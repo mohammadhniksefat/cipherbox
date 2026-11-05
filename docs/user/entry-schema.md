@@ -39,6 +39,90 @@ Every entry carries these metadata fields:
 }
 ```
 
+## Secret types
+
+Every entry carries a `type` that describes what kind of secret it holds. The
+type is a label and validation constraint only — it does not change how the
+entry is stored or encrypted, but it helps you organize and filter your vault.
+
+| Type | Purpose | Typical fields |
+|------|---------|----------------|
+| `login` | Website or service credentials (username + password) | `username`, `password` |
+| `api-key` | Provider API key or token | `provider`, `token` |
+| `ssh` | SSH connection details | `hostname`, `username`, `private_key` |
+| `secure-note` | Free-form text note (no fixed schema) | any free-form keys |
+| `env` | Environment variable definition | `name`, `value` |
+| `recovery` | Recovery / backup codes | `code`, `service` |
+
+Examples:
+
+```json
+{
+  "type": "login",
+  "title": "github",
+  "fields": {
+    "username": "alice",
+    "password": "secret"
+  }
+}
+```
+
+```json
+{
+  "type": "api-key",
+  "title": "openai",
+  "fields": {
+    "provider": "openai",
+    "token": "sk-xyz"
+  }
+}
+```
+
+```json
+{
+  "type": "ssh",
+  "title": "staging server",
+  "fields": {
+    "hostname": "staging.example.com",
+    "username": "deploy",
+    "private_key": "-----BEGIN OPENSSH PRIVATE KEY-----..."
+  }
+}
+```
+
+```json
+{
+  "type": "secure-note",
+  "title": "WiFi password",
+  "fields": {
+    "network": "Home-WiFi",
+    "password": "wifi-secret"
+  }
+}
+```
+
+```json
+{
+  "type": "env",
+  "title": "DATABASE_URL",
+  "fields": {
+    "name": "DATABASE_URL",
+    "value": "postgres://localhost:5432/app"
+  }
+}
+```
+
+```json
+{
+  "type": "recovery",
+  "title": "GitHub recovery codes",
+  "fields": {
+    "service": "github",
+    "code": "abcd-1234"
+  }
+}
+```
+
 ## Validation
 
 Entries are validated when read and written:
