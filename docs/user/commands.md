@@ -43,13 +43,11 @@ Added entry <uuid> (github)
 
 ## `vault show`
 
-Show an entry's metadata. Secret field values are redacted by default.
+Show an entry's complete metadata. Secret field values are redacted by default.
 
 ```bash
 vault show --path ./my-vault <entry-id>
 vault show --path ./my-vault <entry-id> --reveal
-vault show --path ./my-vault <entry-id> --long
-vault show --path ./my-vault <entry-id> --long --reveal
 ```
 
 | Argument | Description |
@@ -57,19 +55,8 @@ vault show --path ./my-vault <entry-id> --long --reveal
 | `--path` | Vault directory path |
 | `id` | Entry id (required) |
 | `--reveal` | Reveal secret field values |
-| `--long` | Show richer metadata: created/updated timestamps and per-field value lengths |
 
-Example output (minimal, redacted):
-
-```
-id:        8f1d2c4b-a11e-4c2d-9e3f-5a6b7c8d9e0f
-type:      login
-title:     github
-tags:      (none)
-fields:    password, username
-```
-
-Example output (`--long`, redacted):
+Example output (redacted):
 
 ```
 id:        8f1d2c4b-a11e-4c2d-9e3f-5a6b7c8d9e0f
@@ -79,8 +66,22 @@ tags:      (none)
 created:   2026-10-27T12:00:00Z
 updated:   2026-10-27T12:00:00Z
 fields:
-  password: 6 chars
-  username: 5 chars
+  password: <redacted>
+  username: <redacted>
+```
+
+Example output (`--reveal`):
+
+```
+id:        8f1d2c4b-a11e-4c2d-9e3f-5a6b7c8d9e0f
+type:      login
+title:     github
+tags:      (none)
+created:   2026-10-27T12:00:00Z
+updated:   2026-10-27T12:00:00Z
+fields:
+  password: secret
+  username: alice
 ```
 
 Secret values stay redacted unless `--reveal` is passed.
@@ -155,10 +156,11 @@ vault list --path ./my-vault --type api-key --tag development --output json
 | `--offset` | Number of entries to skip |
 | `--output` | Output format: `table` (default) or `json` |
 | `--reveal` | Reveal secret field values |
+| `--long` | Show richer metadata: tags, created/updated, and per-field char length |
 
 Filters on different dimensions use AND semantics. Text search across title, fields, and tags is available via `vault search`.
 
-Output:
+Output (minimal, default):
 
 ```
 id          type      title
@@ -168,6 +170,14 @@ id          type      title
 ```
 
 `vault list` prints a minimal table of each entry's id, type, and title — one line per entry, copy-friendly. Secret field values are never shown by `vault list`; use `vault show --reveal <id>` to retrieve a secret.
+
+Use `--long` to see tags, timestamps, and per-field char length:
+
+```
+id          type      title     tags    created                   updated                   fields
+----------  --------  -------   -----   -----------------------   -----------------------   -----------------------------------
+<uuid>      login     github    dev     2026-...                  2026-...                password (11 chars); username (5 chars)
+```
 
 ## `vault backup`
 

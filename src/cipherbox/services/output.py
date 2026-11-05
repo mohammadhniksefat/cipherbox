@@ -94,36 +94,58 @@ def format_list_minimal(entries: list[Entry]) -> str:
     return "\n".join(lines)
 
 
-def _field_summary(entry: Entry, reveal: bool) -> list[str]:
-    """Per-field lines: length by default, value when revealed."""
-    lines: list[str] = []
-    for key in sorted(entry.fields):
-        value = entry.fields[key]
-        if reveal:
-            lines.append(f"  {key}: {value}")
-        else:
-            lines.append(f"  {key}: {len(value)} chars")
-    return lines
+def format_list_long(entries: list[Entry], reveal: bool = False) -> str:
+    """Render entries as a long table: id, type, title, tags, timestamps,
+    and per-field char length (or value when --reveal on show)."""
+    if not entries:
+        return "(no entries)"
 
+    headers = ["id", "type", "title", "tags", "created", "updated", "fields"]
+    rows = []
+    for entry in entries:
+        rows.append(
+            [
+                entry.id,
+                entry.type,
+                entry.title,
+                ", ".join(entry.tags) or "(none)",
+                entry.created_at,
+                entry.updated_at,
+                _fields_line(entry, reveal),
+            ]
+        )
 
-def format_show_minimal(entry: Entry) -> str:
-    """Render a single entry's minimal metadata: id, type, title, tags, field names."""
-    lines = [
-        f"id:        {entry.id}",
-        f"type:      {entry.type}",
-        f"title:     {entry.title}",
-        f"tags:      {', '.join(entry.tags) or '(none)'}",
-    ]
-    if entry.fields:
-        lines.append("fields:    " + ", ".join(sorted(entry.fields)))
-    else:
-        lines.append("fields:    (none)")
+    widths = [len(h) for h in headers]
+    for row in rows:
+        for i, cell in enumerate(row):
+            widths[i] = max(widths[i], len(cell))
+
+    lines = []
+    lines.append("  ".join(h.ljust(w) for h, w in zip(headers, widths)))
+    lines.append("  ".join("-" * w for w in widths))
+    for row in rows:
+        lines.append("  ".join(c.ljust(w) for c, w in zip(row, widths)))
+
     return "\n".join(lines)
 
 
-def format_show_long(entry: Entry, reveal: bool = False) -> str:
-    """Render a single entry's long metadata: id, type, title, tags, timestamps,
-    and per-field value length (or value when --reveal)."""
+def _fields_line(entry: Entry, reveal: bool) -> str:
+    """One-line per-field summary: name (len chars) or name: value when revealed."""
+    if not entry.fields:
+        return "(none)"
+    parts = []
+    for key in sorted(entry.fields):
+        value = entry.fields[key]
+        if reveal:
+            parts.append(f"{key}: {value}")
+        else:
+            parts.append(f"{key} ({len(value)} chars)")
+    return "; ".join(parts)
+
+
+def format_show_full(entry: Entry, reveal: bool = False) -> str:
+    """Render a single entry's complete metadata: id, type, title, tags,
+    timestamps, and fields (values redacted unless reveal)."""
     lines = [
         f"id:        {entry.id}",
         f"type:      {entry.type}",
@@ -134,7 +156,9 @@ def format_show_long(entry: Entry, reveal: bool = False) -> str:
     ]
     if entry.fields:
         lines.append("fields:")
-        lines.extend(_field_summary(entry, reveal))
+        for key in sorted(entry.fields):
+            value = entry.fields[key] if reveal else REDACTED
+            lines.append(f"  {key}: {value}")
     else:
         lines.append("fields:    (none)")
     return "\n".join(lines)

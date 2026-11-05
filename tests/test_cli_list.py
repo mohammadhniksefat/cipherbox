@@ -152,3 +152,18 @@ def test_list_minimal_output_shows_id_type_title(tmp_path, capsys):
     assert "secret" not in out
     assert "sk-xyz" not in out
     assert "staging.gitlab.example.com" not in out
+
+
+def test_list_long_output_shows_tags_timestamps_lengths(tmp_path, capsys):
+    repo = VaultRepository(tmp_path)
+    _seed(repo)
+
+    code = list_command(_args(output="table", long=True), repo=repo)
+    assert code == 0
+    captured = capsys.readouterr()
+    out = captured.out
+    assert "created" in out
+    assert "updated" in out
+    assert "password (6 chars)" in out
+    assert "secret" not in out
+    assert "sk-xyz" not in out

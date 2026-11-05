@@ -6,14 +6,14 @@ import argparse
 import sys
 
 from cipherbox.errors import MissingEntryError, VaultError
-from cipherbox.services.output import format_show_long, format_show_minimal
+from cipherbox.services.output import format_show_full
 from cipherbox.storage.repository import VaultRepository
 
 
 def show_command(args: argparse.Namespace, repo: VaultRepository | None = None) -> int:
-    """Show an entry's metadata, redacting secret fields by default.
+    """Show an entry's complete metadata, redacting secret fields by default.
 
-    Use --long for richer metadata including per-field value lengths.
+    Use --reveal to expose secret field values.
     """
     if repo is None:
         from cipherbox.config.paths import default_vault_dir
@@ -30,8 +30,5 @@ def show_command(args: argparse.Namespace, repo: VaultRepository | None = None) 
         return exc.exit_code
 
     reveal = bool(getattr(args, "reveal", False))
-    if getattr(args, "long", False):
-        print(format_show_long(entry, reveal=reveal))
-    else:
-        print(format_show_minimal(entry))
+    print(format_show_full(entry, reveal=reveal))
     return 0
