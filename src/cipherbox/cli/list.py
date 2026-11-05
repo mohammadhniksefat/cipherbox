@@ -5,7 +5,7 @@ from __future__ import annotations
 import argparse
 import sys
 
-from cipherbox.services.output import format_json, format_table
+from cipherbox.services.output import format_json, format_list_minimal
 from cipherbox.services.query import EntryQuery, FieldQuery, query_entries
 from cipherbox.storage.repository import VaultRepository
 
@@ -63,5 +63,5 @@ def list_command(args: argparse.Namespace, repo: VaultRepository | None = None) 
     if output == "json":
         print(format_json(entries, reveal=reveal))
     else:
-        print(format_table(entries, reveal=reveal))
+        print(format_list_minimal(entries))
     return 0

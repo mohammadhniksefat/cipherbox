@@ -6,18 +6,22 @@ import argparse
 import sys
 
 from cipherbox.errors import MissingEntryError, VaultError
+from cipherbox.services.output import format_show_long, format_show_minimal
 from cipherbox.storage.repository import VaultRepository
 
 
 def show_command(args: argparse.Namespace, repo: VaultRepository | None = None) -> int:
-    """Show an entry's metadata, redacting secret fields by default."""
+    """Show an entry's metadata, redacting secret fields by default.
+
+    Use --long for richer metadata including per-field value lengths.
+    """
     if repo is None:
         from cipherbox.config.paths import default_vault_dir
 
         repo = VaultRepository(default_vault_dir())
 
     try:
-        entry = repo.show(args.id, redact=not getattr(args, "reveal", False))
+        entry = repo.get(args.id)
     except MissingEntryError as exc:
         print(f"error: {exc}", file=sys.stderr)
         return exc.exit_code
@@ -25,19 +29,9 @@ def show_command(args: argparse.Namespace, repo: VaultRepository | None = None) 
         print(f"error: {exc}", file=sys.stderr)
         return exc.exit_code
 
-    print(f"id:        {entry.id}")
-    print(f"type:      {entry.type}")
-    print(f"title:     {entry.title}")
-    print(f"tags:      {', '.join(entry.tags) or '(none)'}")
-    print(f"created:   {entry.created_at}")
-    print(f"updated:   {entry.updated_at}")
-    if entry.fields:
-        print("fields:")
-        for key in sorted(entry.fields):
-            value = (
-                entry.fields[key] if getattr(args, "reveal", False) else "<redacted>"
-            )
-            print(f"  {key}: {value}")
+    reveal = bool(getattr(args, "reveal", False))
+    if getattr(args, "long", False):
+        print(format_show_long(entry, reveal=reveal))
     else:
-        print("fields: (none)")
+        print(format_show_minimal(entry))
     return 0

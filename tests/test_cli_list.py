@@ -129,3 +129,26 @@ def test_list_field_query_equals(tmp_path, capsys):
     captured = capsys.readouterr()
     data = json.loads(captured.out)
     assert [entry["id"] for entry in data] == ["id-b"]
+
+
+def test_list_minimal_output_shows_id_type_title(tmp_path, capsys):
+    repo = VaultRepository(tmp_path)
+    _seed(repo)
+
+    code = list_command(_args(output="table"), repo=repo)
+    assert code == 0
+    captured = capsys.readouterr()
+    out = captured.out
+    # every entry shows id/type/title
+    for entry_id, etype, title in [
+        ("id-a", "login", "github"),
+        ("id-b", "api-key", "openai"),
+        ("id-c", "login", "gitlab"),
+    ]:
+        assert entry_id in out
+        assert etype in out
+        assert title in out
+    # no secret field values leak into list output
+    assert "secret" not in out
+    assert "sk-xyz" not in out
+    assert "staging.gitlab.example.com" not in out

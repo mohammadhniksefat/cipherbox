@@ -152,6 +152,11 @@ def build_parser() -> argparse.ArgumentParser:
     p_show.add_argument(
         "--reveal", action="store_true", help="Reveal secret field values."
     )
+    p_show.add_argument(
+        "--long",
+        action="store_true",
+        help="Show richer metadata including per-field value lengths.",
+    )
 
     p_edit = subparsers.add_parser("edit", help="Edit an existing entry.")
     p_edit.add_argument("--path", default=None, help="Vault directory path.")

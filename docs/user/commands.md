@@ -48,6 +48,8 @@ Show an entry's metadata. Secret field values are redacted by default.
 ```bash
 vault show --path ./my-vault <entry-id>
 vault show --path ./my-vault <entry-id> --reveal
+vault show --path ./my-vault <entry-id> --long
+vault show --path ./my-vault <entry-id> --long --reveal
 ```
 
 | Argument | Description |
@@ -55,8 +57,19 @@ vault show --path ./my-vault <entry-id> --reveal
 | `--path` | Vault directory path |
 | `id` | Entry id (required) |
 | `--reveal` | Reveal secret field values |
+| `--long` | Show richer metadata: created/updated timestamps and per-field value lengths |
 
-Example output (redacted):
+Example output (minimal, redacted):
+
+```
+id:        8f1d2c4b-a11e-4c2d-9e3f-5a6b7c8d9e0f
+type:      login
+title:     github
+tags:      (none)
+fields:    password, username
+```
+
+Example output (`--long`, redacted):
 
 ```
 id:        8f1d2c4b-a11e-4c2d-9e3f-5a6b7c8d9e0f
@@ -66,9 +79,11 @@ tags:      (none)
 created:   2026-10-27T12:00:00Z
 updated:   2026-10-27T12:00:00Z
 fields:
-  password: <redacted>
-  username: <redacted>
+  password: 6 chars
+  username: 5 chars
 ```
+
+Secret values stay redacted unless `--reveal` is passed.
 
 ## `vault edit`
 
@@ -142,6 +157,17 @@ vault list --path ./my-vault --type api-key --tag development --output json
 | `--reveal` | Reveal secret field values |
 
 Filters on different dimensions use AND semantics. Text search across title, fields, and tags is available via `vault search`.
+
+Output:
+
+```
+id          type      title
+----------  --------  -------
+<uuid>      login     github
+<uuid>      api-key   openai
+```
+
+`vault list` prints a minimal table of each entry's id, type, and title — one line per entry, copy-friendly. Secret field values are never shown by `vault list`; use `vault show --reveal <id>` to retrieve a secret.
 
 ## `vault backup`
 
