@@ -29,21 +29,36 @@ class KeyringStore:
         return str(vault_path.resolve())
 
     def get(self, vault_path: Path) -> bytes | None:
-        """Return the stored derived key for ``vault_path``, or None."""
+        """Return the stored derived key for ``vault_path``, or None.
+
+        Gracefully returns None when the keyring backend is unavailable
+        (e.g. headless CI with no secret service).
+        """
         if _keyring_mod is None:
             return None
-        value = _keyring_mod.get_password(self.service_name, self._username(vault_path))
+        try:
+            value = _keyring_mod.get_password(
+                self.service_name, self._username(vault_path)
+            )
+        except Exception:  # noqa: BLE001 - no backend available is not fatal
+            return None
         if value is None:
             return None
         return value.encode("latin-1")
 
     def store(self, vault_path: Path, key: bytes) -> None:
-        """Store the derived key for ``vault_path`` in the keyring."""
+        """Store the derived key for ``vault_path`` in the keyring.
+
+        Silently no-ops when the keyring backend is unavailable.
+        """
         if _keyring_mod is None:
             return
-        _keyring_mod.set_password(
-            self.service_name, self._username(vault_path), key.decode("latin-1")
-        )
+        try:
+            _keyring_mod.set_password(
+                self.service_name, self._username(vault_path), key.decode("latin-1")
+            )
+        except Exception:  # noqa: BLE001,S110 - no backend available is not fatal
+            pass
 
     def erase(self, vault_path: Path) -> None:
         """Remove the stored key for ``vault_path``. Missing entry is OK."""

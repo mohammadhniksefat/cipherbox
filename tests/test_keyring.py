@@ -1,7 +1,5 @@
 """Unit tests for vault keyring helpers."""
 
-import pytest
-
 
 def test_store_get_erase_round_trip(tmp_path, monkeypatch):
     from cipherbox.crypto.keyring import KeyringStore
@@ -49,7 +47,7 @@ def test_keyring_missing_returns_none(tmp_path, monkeypatch):
     assert store.get(tmp_path / "vault") is None
 
 
-def test_keyring_backend_failure_raises(tmp_path, monkeypatch):
+def test_keyring_backend_failure_is_graceful(tmp_path, monkeypatch):
     from cipherbox.crypto.keyring import KeyringStore
 
     store = KeyringStore(service_name="test-cipherbox")
@@ -59,7 +57,12 @@ def test_keyring_backend_failure_raises(tmp_path, monkeypatch):
         def set_password(service, username, password):
             raise OSError("keyring locked")
 
+        @staticmethod
+        def get_password(service, username):
+            raise OSError("keyring locked")
+
     monkeypatch.setattr("cipherbox.crypto.keyring._keyring_mod", BrokenKeyring)
 
-    with pytest.raises(OSError):
-        store.store(tmp_path / "vault", b"\x01" * 32)
+    # store() and get() no-op gracefully when the backend is unavailable.
+    assert store.store(tmp_path / "vault", b"\x01" * 32) is None
+    assert store.get(tmp_path / "vault") is None
