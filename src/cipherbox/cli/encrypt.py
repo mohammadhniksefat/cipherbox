@@ -9,6 +9,7 @@ import sys
 
 from cipherbox.config.paths import resolve_vault_dir
 from cipherbox.crypto.kdf import default_kdf_params, derive_key, kdf_params_to_dict
+from cipherbox.crypto.keyring import KeyringStore
 from cipherbox.crypto.vault import load_vault_crypto, prompt_password, save_vault_crypto
 from cipherbox.storage.repository import VaultRepository
 
@@ -86,6 +87,18 @@ def encrypt_command(
     enc_repo = VaultRepository(vault_path, key=key)
     for entry in entries:
         enc_repo._write_entry_file(enc_repo._entry_path(entry.id), entry)
+
+    # Invalidate any stale keyring entry (the old derived key no longer
+    # unlocks anything after migration) and offer to store the new key.
+    store = KeyringStore()
+    store.erase(vault_path)
+
+    restore = prompt_password("Store new unlock key in keyring? (y/N): ")
+    if restore.strip().lower() == "y":
+        store.store(vault_path, key)
+        print(f"Stored unlock key for vault at {vault_path}")
+    else:
+        print(f"Unlock key not stored for vault at {vault_path}")
 
     print(f"Encrypted {len(entries)} entr{'y' if len(entries) == 1 else 'ies'}")
     return 0

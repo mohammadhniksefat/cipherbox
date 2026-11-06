@@ -465,6 +465,18 @@ vault encrypt --path ./my-vault --confirm
 Refuses to run on an already-encrypted vault. Confirmation is required unless
 `--confirm` is passed.
 
+Any existing keyring entry for the vault is invalidated (the old derived key
+no longer unlocks anything after migration), and you are prompted to store
+the new derived key:
+
+```
+Store new unlock key in keyring? (y/N):
+```
+
+Answer `y` to cache the new key in the OS keyring so subsequent commands
+unlock without prompting; `n` leaves the vault unlocked only via `getpass`
+prompt (or `VAULT_PASSWORD` env var).
+
 ## `vault decrypt`
 
 Decrypt an existing encrypted vault in place. Prompts for the current master
@@ -484,6 +496,9 @@ vault decrypt --path ./my-vault --confirm
 
 Refuses to run on an already-plaintext vault or on a wrong password.
 Confirmation is required unless `--confirm` is passed.
+
+Any existing keyring entry for the vault is removed once the vault is
+plaintext again (the old derived key no longer applies).
 
 ## `vault completion`
 

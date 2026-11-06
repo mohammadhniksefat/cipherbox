@@ -117,3 +117,39 @@ def test_decrypt_wrong_password(tmp_path, monkeypatch, capsys):
     assert code != 0
     err = capsys.readouterr().err
     assert "authentication failed" in err
+
+
+def test_decrypt_erases_keyring_entry(tmp_path, monkeypatch, capsys):
+    """On decrypt, the existing keyring entry for the vault is removed."""
+    vault_dir = _seed_encrypted_vault(tmp_path)
+
+    class FakeKeyring:
+        def __init__(self):
+            self._data = {}
+
+        def get_password(self, service, username):
+            return self._data.get(username)
+
+        def set_password(self, service, username, password):
+            self._data[username] = password
+
+        def delete_password(self, service, username):
+            self._data.pop(username, None)
+
+    fake = FakeKeyring()
+    monkeypatch.setattr("cipherbox.crypto.keyring._keyring_mod", fake)
+
+    # Pre-populate the keyring with a derived key.
+    fake._data[str(vault_dir.resolve())] = b"cached-derived-key"
+
+    # Confirmation "y", then password "master".
+    answers = iter(["y", "master"])
+    monkeypatch.setattr("builtins.input", lambda prompt="": next(answers))
+    monkeypatch.setattr("getpass.getpass", lambda prompt="": next(answers))
+
+    code = main(["decrypt", "--path", str(vault_dir)])
+    assert code == 0
+    capsys.readouterr()
+
+    # Keyring entry removed now that vault is plaintext.
+    assert str(vault_dir.resolve()) not in fake._data

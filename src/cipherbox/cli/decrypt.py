@@ -9,6 +9,7 @@ import sys
 
 from cipherbox.config.paths import resolve_vault_dir
 from cipherbox.crypto.kdf import kdf_params_from_dict
+from cipherbox.crypto.keyring import KeyringStore
 from cipherbox.crypto.vault import (
     CONFIG_FILE_NAME,
     VaultKeyManager,
@@ -91,6 +92,10 @@ def decrypt_command(
     for key in _CRYPTO_KEYS:
         config.pop(key, None)
     config_file.write_text(json.dumps(config, indent=2), encoding="utf-8")
+
+    # The old derived keyring entry no longer applies (vault is now plaintext).
+    store = KeyringStore()
+    store.erase(vault_path)
 
     mgr.lock()
 

@@ -140,3 +140,48 @@ def test_encrypt_then_decrypt_roundtrip(tmp_path, monkeypatch, capsys):
     assert data["title"] == "github"
     assert data["fields"]["password"] == "secret"
     assert data["fields"]["username"] == "alice"
+
+
+def test_encrypt_invalidates_keyring_and_offers_restore(tmp_path, monkeypatch, capsys):
+    """On encrypt, stale keyring entry is erased and user prompted to store
+    the new derived key (mirrors vault password change)."""
+    vault_dir = _seed_plaintext_vault(tmp_path)
+
+    class FakeKeyring:
+        def __init__(self):
+            self._data = {}
+
+        def get_password(self, service, username):
+            return self._data.get(username)
+
+        def set_password(self, service, username, password):
+            self._data[username] = password
+
+        def delete_password(self, service, username):
+            self._data.pop(username, None)
+
+    fake = FakeKeyring()
+    monkeypatch.setattr("cipherbox.crypto.keyring._keyring_mod", fake)
+
+    # Pre-populate the keyring with a stale derived key.
+    fake._data[str(vault_dir.resolve())] = b"stale-key-bytes"
+
+    # Password "master" x2, then "y" to store new key in keyring.
+    inputs = iter(["master", "master", "y"])
+    monkeypatch.setattr("getpass.getpass", lambda prompt="": next(inputs))
+    monkeypatch.setattr("builtins.input", lambda prompt="": "y")
+
+    code = main(["encrypt", "--path", str(vault_dir)])
+    assert code == 0
+    capsys.readouterr()
+
+    # Stale keyring entry is gone (erased).
+    assert fake._data.get(str(vault_dir.resolve())) != b"stale-key-bytes"
+    # New derived key was stored (user said "y").
+    assert str(vault_dir.resolve()) in fake._data
+
+    # New password unlocks the encrypted vault via keyring-cached key.
+    monkeypatch.setattr("getpass.getpass", lambda prompt="": "master")
+    monkeypatch.setattr("builtins.input", lambda prompt="": "y")
+    code = main(["decrypt", "--path", str(vault_dir)])
+    assert code == 0
